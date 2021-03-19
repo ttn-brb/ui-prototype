@@ -1,7 +1,7 @@
 {
   "name": "ttn-brb-ui-prototype",
   "version": "1.0.0-dev",
-  "description": "Weboberfläche für Prototyp des Brandenburger TTN Portals",
+  "description": "Web-Oberfläche für Prototyp des Brandenburger TTN Portals",
   "author": {
     "name": "Tobias Kiertscher",
     "email": "dev@mastersign.de",

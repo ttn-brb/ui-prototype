@@ -1,3 +1,3 @@
 # TTN BRB UI Prototyp
 
-> Weboberfläche für Prototyp des Brandenburger TTN Portals
+> Web-Oberfläche für Prototyp des Brandenburger TTN Portals
