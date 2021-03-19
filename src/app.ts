@@ -1,11 +1,13 @@
 import path from 'path'
-import fs from 'fs'
+import _ from 'lodash'
 import express from 'express'
 import { log } from './logging'
+import { getState } from './state'
+import { buildSensorInfo } from './data'
 
 function httpLogging(req: express.Request, res: express.Response, next: express.NextFunction) {
-    log.http(req.originalUrl)
     next()
+    log.http(`${res.statusCode} - ${req.originalUrl}`)
 }
 
 export function setupApp() {
@@ -23,6 +25,22 @@ export function setupApp() {
                 log.error(`Failed to read view index.html: ${err}`)
             }
         })
+    })
+
+    app.get('/sensors', (req, res) => {
+        const dataSet = getState().dataSet
+        const sensorInfos = _.map(dataSet.sensors, buildSensorInfo)
+        res.send(sensorInfos)
+    })
+
+    app.get('/sensors/:sensorId', (req, res) => {
+        const dataSet = getState().dataSet
+        const sensor = dataSet.sensors[req.params.sensorId]
+        if (!sensor) {
+            res.status(404).end()
+        } else {
+            res.send(sensor)
+        }
     })
 
     return app
