@@ -5,9 +5,10 @@ Colors, textures and basic design ideas are borrowed from https://www.stadt-bran
 */
 :root {
     --background: #FFFFFF;
+    --foreground: #202020;
     --primary-color: #456490;
     --secondary-color: #736753;
-    --tertiary-color: #b1a289;
+    --tertiary-color: #a8997d;
     --colored-background: #c8d8ee;
     --foreground-on-color: #FFFFFF;
     --separator-thickness: 4px;
@@ -25,11 +26,13 @@ body {
     flex-direction: column;
     align-items: stretch;
     background: var(--background);
+    color: var(--foreground);
 }
-a {
+a, .interactive {
     color: var(--primary-color);
+    cursor: pointer;
 }
-a:hover {
+a:hover, .interactive:hover {
     text-decoration: none;
 }
 header {
@@ -80,7 +83,7 @@ footer {
     align-items: stretch;
 }
 #sidebar {
-    width: 16rem;
+    width: 17rem;
     background-color: var(--colored-background);
     padding: 1rem;
     background-image: url('sidebar-welle-4.png');
@@ -90,11 +93,21 @@ footer {
 #map {
     flex-grow: 1;
 }
-
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background: var(--background);
+    color: var(--foreground);
+}
+.leaflet-popup-content-wrapper {
+    border-radius: 0.2rem;
+}
+.leaflet-popup-close-button {
+    display: none;
+}
 .side-block {
     background-color: var(--background);
     padding: 1rem;
     font-size: 0.9rem;
+    margin-bottom: 1rem;
 }
 .side-block h3 {
     text-align: center;
@@ -123,6 +136,7 @@ footer {
 .measurement {
     display: flex;
     justify-content: stretch;
+    margin-bottom: 0.125rem;
 }
 .measurement .measurement-label::after {
     content: ':';
@@ -132,8 +146,11 @@ footer {
     flex-grow: 1;
     text-align: right;
 }
-.primary-measurement {
+.selected-measurement {
     font-weight: 600;
+}
+.sensor-plot {
+    width: 100%;
 }
 
 @media screen and (max-height: 800px) and (min-width: 641px) {

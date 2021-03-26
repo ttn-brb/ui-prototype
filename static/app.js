@@ -29,7 +29,9 @@ function updateMap(ctx, style) {
 }
 
 function initializeMap(ctx) {
-    ctx.map.on('click', hideSensorInfo);
+    ctx.map.on('click', function () {
+        hideSensorInfo(ctx);
+    });
 }
 
 function setupMap(ctx) {
@@ -50,20 +52,73 @@ function formatLocation(l) {
 }
 
 function currentMeasurementHtml(sensor, series) {
-    if (!series) return
+    if (!series) return;
     var isPrimary = series.id == sensor.primarySeriesId;
-    var additionalClass = isPrimary ? ' primary-measurement' : '';
-    return '<div class="measurement' + additionalClass +
-        '"><span class="measurement-label">' +
+    var labelHtml = '<span class="measurement-label">' +
         series.type.label +
-        '</span><span class="measurement-value">' +
+        '</span>';
+    var valueHtml = '<span class="measurement-value">' +
         formatNumber(_.get(_.last(series.samples), 'value'), 1) +
         '&nbsp;' + series.type.unit +
-        '</span></div>';
+        '</span>';
+    var additionalClass = isPrimary ? ' primary-measurement' : '';
+    return '<div' +
+        ' class="measurement interactive series-' + series.id + additionalClass + '"' +
+        ' onclick="showSeriesPlot(\'' + series.id + '\')"' +
+        '>' +
+        labelHtml +
+        valueHtml +
+        '</div>';
 }
 
-function showSensorInfo(sensorId) {
+function createSeriesVegaLiteSpec(series) {
+    return {
+        width: 'container',
+        height: 90,
+        data: {
+            values: series.samples,
+        },
+        mark: {
+            type: 'line',
+            color: '#456490',
+        },
+        encoding: {
+            y: {
+                field: 'value',
+                type: 'quantitative',
+                title: null,
+            },
+            x: {
+                field: 'ts',
+                type: 'temporal',
+                title: null,
+                axis: {
+                    format: '%a',
+                }
+            },
+        },
+    };
+}
+
+function showSeriesPlot(seriesId) {
+    var ctx = window.ctx;
+    var sensor = ctx.currentSensor;
+    var series = _.get(sensor, ['data', seriesId]);
+    if (!series) return;
+    ctx.currentSeriesId = seriesId;
+    $('.measurement').removeClass('selected-measurement');
+    $('.measurement.series-' + seriesId).addClass('selected-measurement');
+    vegaEmbed('#sensor-details .sensor-plot',
+        createSeriesVegaLiteSpec(series),
+        {
+            mode: 'vega-lite',
+            actions: false,
+        });
+}
+
+function showSensorInfo(ctx, sensorId) {
     $.get('sensors/' + sensorId, sensor => {
+        ctx.currentSensor = sensor;
         $('#intro-info').hide();
         var $sd = $('#sensor-details');
         $sd.find('.sensor-name').text(sensor.name);
@@ -71,8 +126,6 @@ function showSensorInfo(sensorId) {
         $sd.find('.sensor-location').text(formatLocation(sensor.location));
 
         var $ss = $('#sensor-details .sensor-series').empty();
-        $ss.prepend('<h5>Aktuelle Messwerte</h5>');
-
         var ps = _.get(sensor, ['data', sensor.primarySeriesId]);
         $ss.append(currentMeasurementHtml(sensor, ps));
 
@@ -82,17 +135,20 @@ function showSensorInfo(sensorId) {
             $ss.append(currentMeasurementHtml(sensor, s));
         }
         $sd.show();
+
+        showSeriesPlot(sensor.primarySeriesId);
     });
 }
 
-function hideSensorInfo() {
+function hideSensorInfo(ctx) {
+    ctx.currentSensor = null;
     $('#sensor-details').hide();
     $('#intro-info').show();
 }
 
 function markerClickHandler(e) {
     var marker = e.target;
-    showSensorInfo(marker.sensorId);
+    showSensorInfo(window.ctx, marker.sensorId);
 }
 function markerMouseOverHandler(e) {
     var marker = e.target;
