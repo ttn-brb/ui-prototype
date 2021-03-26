@@ -11,7 +11,11 @@ function createBasemap(style) {
 }
 
 function updateMap(ctx, style) {
-    var map = ctx.map || (ctx.map = L.map('map').setView([52.41563, 12.54754], 13));
+    var map = ctx.map;
+    if (!map) {
+        map = ctx.map = L.map('map').setView([52.41563, 12.54754], 13);
+        initializeMap(ctx);
+    }
     var mapStyle = ctx.mapStyle || 'initial';
     if (!ctx.tileLayer) {
         ctx.tileLayer = createBasemap(style);
@@ -22,6 +26,10 @@ function updateMap(ctx, style) {
         ctx.tileLayer.setUrl(tileServerUrl(style));
         ctx.mapStyle = style;
     }
+}
+
+function initializeMap(ctx) {
+    ctx.map.on('click', hideSensorInfo);
 }
 
 function setupMap(ctx) {
@@ -58,6 +66,11 @@ function showSensorInfo(sensorId) {
         }
         $sd.show();
     });
+}
+
+function hideSensorInfo() {
+    $('#sensor-details').hide();
+    $('#intro-info').show();
 }
 
 function markerClickHandler(e) {
