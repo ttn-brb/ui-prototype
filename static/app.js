@@ -50,19 +50,20 @@ function formatLocation(l) {
 }
 
 function showSensorInfo(sensorId) {
-    $.get('sensors/' + sensorId, s => {
+    $.get('sensors/' + sensorId, sensor => {
         $('#intro-info').hide();
         var $sd = $('#sensor-details');
-        $sd.find('.sensor-name').text(s.name);
-        $sd.find('.sensor-description').text(s.description);
-        $sd.find('.sensor-location').text(formatLocation(s.location));
-        var ps = s.data[s.primarySeriesId];
+        $sd.find('.sensor-name').text(sensor.name);
+        $sd.find('.sensor-description').text(sensor.description);
+        $sd.find('.sensor-location').text(formatLocation(sensor.location));
+        var ps = _.get(sensor, ['data', sensor.primarySeriesId]);
         if (ps) {
-            $sd.find('.sensor-primary-value-label')
+            $sd.find('.primary-measurement-label')
                 .text(ps.type.label)
                 .attr('title', ps.type.description);
-            var pv = ps.samples[ps.samples.length - 1];
-            $sd.find('.sensor-primary-value').text(formatNumber(pv.value, 1) + ' ' + ps.type.unit);
+            var pv = _.last(ps.samples);
+            $sd.find('.primary-measurement-value')
+                .text(formatNumber(pv.value, 1) + ' ' + ps.type.unit);
         }
         $sd.show();
     });
