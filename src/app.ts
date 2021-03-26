@@ -28,18 +28,21 @@ export function setupApp() {
     })
 
     app.get('/sensors', (req, res) => {
-        const dataSet = getState().dataSet
-        const sensorInfos = _.map(dataSet.sensors, buildSensorInfo)
+        const state = getState()
+        const sensors = state.sensors
+        const sensorInfos = _.map(sensors,
+            sensor => buildSensorInfo(sensor, state.sensorData[sensor.id]))
         res.send(sensorInfos)
     })
 
     app.get('/sensors/:sensorId', (req, res) => {
-        const dataSet = getState().dataSet
-        const sensor = dataSet.sensors[req.params.sensorId]
+        const state = getState()
+        const sensor = state.sensors[req.params.sensorId]
+        const sensorData = state.sensorData[req.params.sensorId]
         if (!sensor) {
             res.status(404).end()
         } else {
-            res.send(sensor)
+            res.send({...sensor, ...sensorData})
         }
     })
 

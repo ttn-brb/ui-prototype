@@ -1,9 +1,9 @@
 import _ from 'lodash'
-import { Sensor } from './state'
+import { Sensor, SensorData } from './model'
 
-export function buildSensorInfo(sensor: Sensor) {
+export function buildSensorInfo(sensor: Sensor, sensorData: SensorData) {
     const primarySeries = sensor.primarySeriesId
-        ? sensor.data[sensor.primarySeriesId]
+        ? sensorData.data[sensor.primarySeriesId]
         : null
     const lastSample = _.last(_.orderBy(primarySeries?.samples, 'ts'))
     return {
