@@ -1,6 +1,6 @@
 /*
 
-Colors and basic design ideas are borrowed from https://www.stadt-brandenburg.de
+Colors, textures and basic design ideas are borrowed from https://www.stadt-brandenburg.de
 
 */
 :root {
@@ -35,6 +35,9 @@ a:hover {
 header {
     flex-basis: content;
     padding: 0.25rem 1.25rem 0.55rem;
+    background-image: url('header-welle.png');
+    background-repeat: repeat-y;
+    background-position: bottom right;
 }
 header h1 {
     font-size: 2.5rem;
@@ -80,6 +83,9 @@ footer {
     width: 16rem;
     background-color: var(--colored-background);
     padding: 1rem;
+    background-image: url('sidebar-welle-4.png');
+    background-position: bottom;
+    background-repeat: repeat-x;
 }
 #map {
     flex-grow: 1;
@@ -130,10 +136,16 @@ footer {
     font-weight: 600;
 }
 
+@media screen and (max-height: 800px) and (min-width: 641px) {
+    #sidebar {
+        background-image: url('sidebar-welle-3.png');
+    }
+}
 @media screen and (max-width: 640px) {
     header {
         text-align: center;
         padding: 0.15rem 0.5rem 0.25rem;
+        background: none;
     }
     header h1 {
         font-size: 2rem;
@@ -151,6 +163,7 @@ footer {
         height: 15rem;
         min-height: 4rem;
         overflow-y: scroll;
+        background-image: url('sidebar-welle-2.png');
     }
     footer {
         font-size: 0.8rem;
