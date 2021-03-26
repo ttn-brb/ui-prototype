@@ -7,6 +7,7 @@ Colors and basic design ideas are borrowed from https://www.stadt-brandenburg.de
     --background: #FFFFFF;
     --primary-color: #456490;
     --secondary-color: #736753;
+    --tertiary-color: #b1a289;
     --colored-background: #c8d8ee;
     --foreground-on-color: #FFFFFF;
     --separator-thickness: 4px;
@@ -94,13 +95,19 @@ footer {
     font-size: 1.5rem;
     margin: 0 0 0.75rem;
 }
-.side-block h4 {
-    font-size: 1.05rem;
+.side-block h4, .side-block h5 {
     font-weight: 600;
-    background: var(--secondary-color);
     padding: 0.15rem 0.5rem 0.25rem;
     margin: 0.5rem -0.5rem;
     color: var(--foreground-on-color);
+}
+.side-block h4 {
+    font-size: 1.05rem;
+    background: var(--secondary-color);
+}
+.side-block h5 {
+    font-size: 1rem;
+    background: var(--tertiary-color);
 }
 .sensor-description {
     font-size: 0.85rem;
@@ -118,6 +125,9 @@ footer {
 .measurement .measurement-value {
     flex-grow: 1;
     text-align: right;
+}
+.primary-measurement {
+    font-weight: 600;
 }
 
 @media screen and (max-width: 640px) {

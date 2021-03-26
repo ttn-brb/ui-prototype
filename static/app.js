@@ -49,6 +49,19 @@ function formatLocation(l) {
     return formatNumber(l.lat, 5) + '; ' + formatNumber(l.lon, 5);
 }
 
+function currentMeasurementHtml(sensor, series) {
+    if (!series) return
+    var isPrimary = series.id == sensor.primarySeriesId;
+    var additionalClass = isPrimary ? ' primary-measurement' : '';
+    return '<div class="measurement' + additionalClass +
+        '"><span class="measurement-label">' +
+        series.type.label +
+        '</span><span class="measurement-value">' +
+        formatNumber(_.get(_.last(series.samples), 'value'), 1) +
+        '&nbsp;' + series.type.unit +
+        '</span></div>';
+}
+
 function showSensorInfo(sensorId) {
     $.get('sensors/' + sensorId, sensor => {
         $('#intro-info').hide();
@@ -56,14 +69,17 @@ function showSensorInfo(sensorId) {
         $sd.find('.sensor-name').text(sensor.name);
         $sd.find('.sensor-description').text(sensor.description);
         $sd.find('.sensor-location').text(formatLocation(sensor.location));
+
+        var $ss = $('#sensor-details .sensor-series').empty();
+        $ss.prepend('<h5>Aktuelle Messwerte</h5>');
+
         var ps = _.get(sensor, ['data', sensor.primarySeriesId]);
-        if (ps) {
-            $sd.find('.primary-measurement-label')
-                .text(ps.type.label)
-                .attr('title', ps.type.description);
-            var pv = _.last(ps.samples);
-            $sd.find('.primary-measurement-value')
-                .text(formatNumber(pv.value, 1) + ' ' + ps.type.unit);
+        $ss.append(currentMeasurementHtml(sensor, ps));
+
+        var series = _.orderBy(_.values(sensor.data), series => series.type.label);
+        for (var s of series) {
+            if (s.id === sensor.primarySeriesId) continue;
+            $ss.append(currentMeasurementHtml(sensor, s));
         }
         $sd.show();
     });
