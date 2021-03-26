@@ -84,17 +84,17 @@ footer {
     flex-grow: 1;
 }
 
-#sensor-details {
+.side-block {
     background-color: var(--background);
     padding: 1rem;
     font-size: 0.95rem;
 }
-#sensor-details h3 {
+.side-block h3 {
     text-align: center;
     font-size: 1.5rem;
     margin: 0 0 0.75rem;
 }
-#sensor-details h4 {
+.side-block h4 {
     font-size: 1.05rem;
     font-weight: 600;
     background: var(--secondary-color);
@@ -134,7 +134,7 @@ footer {
         font-size: 0.8rem;
         padding: 0.25rem 1rem 0.5rem;
     }
-    #sensor-details h3 {
+    .side-block h3 {
         text-align: left;
     }
 }

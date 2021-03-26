@@ -43,6 +43,7 @@ function formatLocation(l) {
 
 function showSensorInfo(sensorId) {
     $.get('sensors/' + sensorId, s => {
+        $('#intro-info').hide();
         var $sd = $('#sensor-details');
         $sd.find('.sensor-name').text(s.name);
         $sd.find('.sensor-description').text(s.description);
