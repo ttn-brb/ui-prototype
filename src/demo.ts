@@ -111,8 +111,8 @@ export function randomSensors() : SensorMap {
         'id')
 }
 
-export function randomSampleValue(ts: Dayjs, sampleType: SampleType) {
-    return randSampleValue(ts.hour() / 12, sampleType)
+export function randomSampleValue(ts: Dayjs, sampleType: SampleType, offset: number) {
+    return randSampleValue(ts.unix() / (12 * 60 * 60) + offset, sampleType)
 }
 
 export function randomSensorData(sensor: Sensor, now: Dayjs) : SensorData {

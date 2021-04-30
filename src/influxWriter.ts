@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import dayjs, { Dayjs } from 'dayjs'
+import CRC32  from 'crc-32'
 import { log } from './logging'
 import { getState } from './state'
 import { randomSampleValue } from './demo'
@@ -13,8 +14,9 @@ function randomWriteSamples(now: Dayjs) {
     for (const sensor of _.values(state.sensors)) {
         for (const seriesId of _.keys(sensor.series)) {
             if (Math.random() > samplePropability) continue
+            const randomOffset = CRC32.str(sensor.id + seriesId) % (24 * 7)
             const sampleType = sensor.series[seriesId]
-            const sampleValue = randomSampleValue(now, sampleType)
+            const sampleValue = randomSampleValue(now, sampleType, randomOffset)
             result.push({
                 ts: now.toISOString(),
                 sensorId: sensor.id,
