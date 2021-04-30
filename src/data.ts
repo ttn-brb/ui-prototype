@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { Sensor, SensorData } from './model'
+import { Sensor, SensorData, SensorMap } from './model'
 
 export function buildSensorInfo(sensor: Sensor, sensorData: SensorData) {
     const primarySeries = sensor.primarySeriesId
@@ -23,4 +23,19 @@ export function buildSensorInfo(sensor: Sensor, sensorData: SensorData) {
             }
             : null,
     }
+}
+
+export function emptySensorData(sensor: Sensor) {
+    return {
+        track: null,
+        data: _.mapValues(sensor.series, (sampleType, seriesId) => ({
+            id: seriesId,
+            type: sampleType,
+            samples: [],
+        }))
+    }
+}
+
+export function emptySensorDataMap(sensors: SensorMap) {
+    return _.mapValues(sensors, emptySensorData)
 }
