@@ -1,7 +1,8 @@
 import fs from 'fs'
 import _ from 'lodash'
 import { SensorDataMap, SensorMap } from './model'
-import { randomSensorDataMap, randomSensors } from './demo'
+import { randomSensors } from './demo'
+import { emptySensorDataMap } from './data'
 
 interface AppState {
     sensors: SensorMap,
@@ -18,7 +19,7 @@ function initializeAppState() : AppState {
         sensors = randomSensors()
         fs.writeFileSync(sensorsFile, JSON.stringify(sensors, null, '  '), { encoding: 'utf-8'})
     }
-    let sensorData = randomSensorDataMap(sensors)
+    const sensorData = emptySensorDataMap(sensors)
     return {
         sensors,
         sensorData,
