@@ -40,6 +40,7 @@ let intervalHandle : NodeJS.Timeout | null = null
 export function startWritingDemoSamples(intervalSeconds: number, propability: number) {
     stopWritingDemoSamples()
     samplePropability = propability
+    writeRandomSamplesForNow()
     intervalHandle = setInterval(writeRandomSamplesForNow, intervalSeconds * 1000)
 }
 
