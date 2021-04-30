@@ -1,3 +1,4 @@
 node_modules/
 /build/
+/influxdb-data/
 sensors.json

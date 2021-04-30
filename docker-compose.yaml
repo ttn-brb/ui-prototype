@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+
+  db:
+    image: influxdb:2.0-alpine
+    volumes:
+      - ./influxdb-data:/var/lib/influxdb2
+    ports:
+      - 127.0.0.1:8086:8086
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: influxuser
+      DOCKER_INFLUXDB_INIT_PASSWORD: mY53CreT
+      DOCKER_INFLUXDB_INIT_ORG: ttn-brb
+      DOCKER_INFLUXDB_INIT_BUCKET: ui-prototype-bucket
+      DOCKER_INFLUXDB_INIT_RETENTION: 1w  # https://docs.influxdata.com/influxdb/v2.0/organizations/buckets/create-bucket/
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: 59326c6f5809d991636e978acec2c8
+
+  webserver:
+    build: .
+    init: true
+    ports:
+     - 127.0.0.1:8080:80
+    environment:
+      INFLUX_DB_URL: http://db:8086
+      INFLUX_DB_TOKEN: 59326c6f5809d991636e978acec2c8
+      SNAPSHOT_INTERVAL: PT10S
+      DISPLAY_RANGE: PT1H
+      DISPLAY_WINDOW: PT1M
+      DEMO_SAMPLE_INTERVAL: PT10S
+      DEMO_SAMPLE_PROPABILITY: 50
