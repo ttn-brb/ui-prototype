@@ -30,3 +30,10 @@ let state: AppState = initializeAppState()
 export function getState() {
     return state
 }
+
+export function updateSensorData(sensorData: SensorDataMap) {
+    state = {...state,
+        sensorData,
+    }
+    return state
+}
