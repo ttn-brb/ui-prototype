@@ -58,7 +58,7 @@ export function setupApi() {
         log.verbose(`SAMPLE ${sensorId}/${seriesId} ${value}`)
         writeSamples([sample]).then(
             () => {
-                res.status(201).end()
+                res.status(204).end()
             },
             error => {
                 res.status(500).send(error)
