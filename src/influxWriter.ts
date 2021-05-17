@@ -49,3 +49,12 @@ export function stopWritingDemoSamples() {
     clearInterval(intervalHandle)
     intervalHandle = null
 }
+
+export function writeMeasurement(ts: Dayjs, sensorId: string, seriesId: string, value: number) {
+    return writeSamples([{
+        ts: ts.toISOString(),
+        sensorId,
+        seriesId,
+        value,
+    }])
+}

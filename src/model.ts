@@ -24,6 +24,7 @@ export type SampleTypeMap = {
 export interface Sensor {
     id: string,
     name: string,
+    token: string,
     description: string,
     series: SampleTypeMap,
     primarySeriesId: string | null,
