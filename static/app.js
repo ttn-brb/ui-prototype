@@ -1,6 +1,6 @@
 function tileServerUrl(style) {
     return style
-        ? 'https://tiles.mastersign.de/styles/' + style + '/{z}/{x}/{y}.png'
+        ? 'https://tiles-2.mastersign.de/styles/' + style + '/{z}/{x}/{y}.png'
         : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 }
 
