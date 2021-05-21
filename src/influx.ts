@@ -80,23 +80,19 @@ export async function readWindowAggregatedSamples(
     return await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
 }
 
-    return new Promise((onSuccess, onError) => {
-        queryApi.queryRows(fluxQuery, {
-            next(row: string[], tableMeta: FluxTableMetaData) {
-                const o = tableMeta.toObject(row)
-                samples.push({
-                    ts: dayjs(o._time).toISOString(),
-                    sensorId,
-                    seriesId,
-                    value: Number.parseFloat(o._value),
-                })
-            },
-            error(error: Error) {
-                onError(error)
-            },
-            complete() {
-                onSuccess(samples)
-            },
-        })
-    })
+export async function readLastSample(
+    sensorId: string, seriesId: string,
+    rangeStart: Dayjs
+) : Promise<InfluxSample | null> {
+
+    const fluxQuery = `from(bucket: "${bucket}")
+    |> range(start: ${rangeStart.unix()})
+    |> filter(fn: (r) => r["sensor"] == "${sensorId}")
+    |> filter(fn: (r) => r["series"] == "${seriesId}")
+    |> filter(fn: (r) => r["_measurement"] == "sensor_value")
+    |> filter(fn: (r) => r["_field"] == "value")
+    |> last()`
+
+    const rows = await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
+    return rows.length > 0 ? rows[0] : null
 }

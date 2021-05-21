@@ -3,7 +3,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import { log } from './logging'
 import { SensorData, SensorDataMap } from './model'
 import { getState, updateSensorData } from './state'
-import { readWindowAggregatedSamples } from './influx'
+import { readLastSample, readWindowAggregatedSamples } from './influx'
 
 let rangeSize = 7 * 24 * 60 * 60
 let window = 60 * 60
@@ -30,6 +30,7 @@ async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSec
         for (const seriesId of _.keys(sensor.series)) {
             const sampleType = sensor.series[seriesId]
             const samples = await readWindowAggregatedSamples(sensor.id, seriesId, rangeStart, rangeStop, windowInSeconds)
+            const lastSample = await readLastSample(sensor.id, seriesId, rangeStart)
             sensorData.data[seriesId] = {
                 id: seriesId,
                 type: sampleType,
@@ -37,6 +38,10 @@ async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSec
                     ts: influxSample.ts,
                     value: influxSample.value,
                 })),
+                lastSample: lastSample ? {
+                    ts: lastSample.ts,
+                    value: lastSample.value,
+                } : undefined,
             }
         }
         sensorDataMap[sensor.id] = sensorData

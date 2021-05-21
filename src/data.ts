@@ -7,12 +7,10 @@ const freshnessWindow = _.toSafeInteger(_.get(process.env, 'FRESHNESS_WINDOW') |
 export function lastActivity(sensorData: SensorData) {
     let lastActivity = dayjs('1970-01-01T00:00:00Z')
     for (const series of _.values(sensorData.data)) {
-        for (const s of series.samples) {
-            if (!s || !s.ts) continue
-            const ts = dayjs(s.ts)
-            if (ts.diff(lastActivity) > 0) {
-                lastActivity = ts
-            }
+        if (!series.lastSample || !series.lastSample.ts) continue
+        const ts = dayjs(series.lastSample.ts)
+        if (ts.diff(lastActivity) > 0) {
+            lastActivity = ts
         }
     }
     return lastActivity
@@ -20,12 +18,6 @@ export function lastActivity(sensorData: SensorData) {
 
 function freshness(lastActivity: dayjs.Dayjs) {
     return 1.0 - Math.max(0, Math.min(freshnessWindow, dayjs().diff(lastActivity, 'seconds'))) / freshnessWindow
-}
-
-export function lastSample(series: Series | null | undefined) {
-    return series && !_.isEmpty(series.samples)
-        ? _.last(_.orderBy(series.samples, s => s.ts))
-        : undefined
 }
 
 interface SensorInfoSeries extends SampleType {
@@ -57,7 +49,7 @@ export function buildSensorInfo(sensor: Sensor, sensorData: SensorData) {
             device: sampleType.device,
             unit: sampleType.unit,
             defaultDomain: sampleType.defaultDomain,
-            lastSample: lastSample(series),
+            lastSample: _.get(series, 'lastSample'),
         }
     })
     return info
@@ -70,6 +62,7 @@ export function emptySensorData(sensor: Sensor) {
             id: seriesId,
             type: sampleType,
             samples: [],
+            lastSample: undefined,
         }))
     }
 }

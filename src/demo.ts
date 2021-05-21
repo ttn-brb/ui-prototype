@@ -118,11 +118,15 @@ export function randomSampleValue(ts: Dayjs, sampleType: SampleType, offset: num
 export function randomSensorData(sensor: Sensor, now: Dayjs) : SensorData {
     return {
         track: null,
-        data: _.mapValues(sensor.series, (type, key) => ({
-            id: key,
-            type: type,
-            samples: randSamples(now, type),
-        })),
+        data: _.mapValues(sensor.series, (type, id) => {
+            const samples = randSamples(now, type)
+            return {
+                id,
+                type,
+                samples,
+                lastSample: _.last(samples),
+            }
+        }),
     }
 }
 

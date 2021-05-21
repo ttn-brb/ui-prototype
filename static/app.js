@@ -89,7 +89,7 @@ function currentMeasurementHtml(sensor, series) {
     var labelHtml = '<span class="measurement-label">' +
         series.type.label +
         '</span>';
-    var latestSample = _.last(_.orderBy(sensor.data[series.id].samples, s => s.ts));
+    var latestSample = sensor.data[series.id].lastSample;
     var latestTimestamp = latestSample ?
         formatTimestamp(latestSample.ts) :
         '';

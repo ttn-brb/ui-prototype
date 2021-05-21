@@ -43,6 +43,7 @@ export interface Series {
     id: string,
     type: SampleType,
     samples: Sample[],
+    lastSample: Sample | undefined,
 }
 
 export type SeriesMap = {
