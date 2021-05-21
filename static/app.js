@@ -1,6 +1,6 @@
 function tileServerUrl(style) {
     return style
-        ? 'https://tiles-2.mastersign.de/styles/' + style + '/{z}/{x}/{y}.png'
+        ? window.cfg.styledTileServer + '/styles/' + style + '/{z}/{x}/{y}.png'
         : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 }
 
@@ -189,6 +189,13 @@ function loadSensors(ctx) {
 }
 
 $(function () {
+    // initialize defaults for dynamic configuration
+    var cfg = window.cfg || {
+        styledTileServer: 'https://tiles.ttn-brb.de'
+    };
+    window.cfg = cfg;
+
+    // initialize empty context for sensor data
     var ctx = {};
     window.ctx = ctx;
 

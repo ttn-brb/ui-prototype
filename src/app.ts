@@ -5,6 +5,11 @@ import { log } from './logging'
 import { getState } from './state'
 import { buildSensorInfo } from './data'
 
+const styledTileServer = _.get(process.env, 'STYLED_TILE_SERVER') || 'https://tiles.ttn-brb.de'
+const uiConfig = {
+    styledTileServer,
+}
+
 function httpLogging(req: express.Request, res: express.Response, next: express.NextFunction) {
     next()
     log.http(`${res.statusCode} - ${req.originalUrl}`)
@@ -25,6 +30,11 @@ export function setupApp() {
                 log.error(`Failed to read view index.html: ${err}`)
             }
         })
+    })
+
+    app.get('/config.js', (req, res) => {
+        res.contentType('application/javascript')
+        res.send(`window.cfg = ${JSON.stringify(uiConfig, null, '  ')};`)
     })
 
     app.get('/sensors', (req, res) => {
