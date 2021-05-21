@@ -32,12 +32,41 @@ export async function writeSamples(samples: _.List<InfluxSample> | InfluxSample[
     await writeApi.close()
 }
 
-export function readSamples(
+function readAsync<T>(query: string, rowHandler: (row: string[], tableMeta: FluxTableMetaData) => T) : Promise<T[]> {
+    const queryApi = influx.getQueryApi(org)
+    const items: T[] = []
+    return new Promise((onSuccess, onError) => {
+        queryApi.queryRows(query, {
+            next(row: string[], tableMeta: FluxTableMetaData) {
+                items.push(rowHandler(row, tableMeta))
+            },
+            error(error: Error) {
+                onError(error)
+            },
+            complete() {
+                onSuccess(items)
+            },
+        })
+    })
+}
+
+function buildSampleParser(sensorId: string, seriesId: string) {
+    return (row: string[], tableMeta: FluxTableMetaData) => {
+        const o = tableMeta.toObject(row)
+        return {
+            ts: dayjs(o._time).toISOString(),
+            sensorId,
+            seriesId,
+            value: Number.parseFloat(o._value),
+        }
+    }
+}
+
+export async function readWindowAggregatedSamples(
     sensorId: string, seriesId: string,
     rangeStart: Dayjs, rangeStop: Dayjs,
     windowInSeconds: number
 ) : Promise<InfluxSample[]> {
-    const queryApi = influx.getQueryApi(org)
 
     const fluxQuery = `from(bucket: "${bucket}")
     |> range(start: ${rangeStart.unix()}, stop: ${rangeStop.unix()})
@@ -45,10 +74,11 @@ export function readSamples(
     |> filter(fn: (r) => r["series"] == "${seriesId}")
     |> filter(fn: (r) => r["_measurement"] == "sensor_value")
     |> filter(fn: (r) => r["_field"] == "value")
-    |> aggregateWindow(every: ${windowInSeconds}s, fn: mean, createEmpty: false)
+    |> aggregateWindow(every: ${windowInSeconds}s, fn: mean, createEmpty: true)
     |> yield(name: "mean")`
 
-    const samples: InfluxSample[] = []
+    return await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
+}
 
     return new Promise((onSuccess, onError) => {
         queryApi.queryRows(fluxQuery, {
