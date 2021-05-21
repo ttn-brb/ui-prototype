@@ -17,6 +17,13 @@ vega.defaultLocale(
         "shortMonths": ["Jan", "Feb", "Mrz", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
     }
 );
+
+// setup Day.js locale
+dayjs.extend(window.dayjs_plugin_utc);
+// setup Day.js PlugIns
+dayjs.extend(window.dayjs_plugin_timezone);
+dayjs.locale('de');
+
 function tileServerUrl(style) {
     return style
         ? window.cfg.styledTileServer + '/styles/' + style + '/{z}/{x}/{y}.png'
@@ -68,6 +75,13 @@ function formatNumber(n, decimals) {
 
 function formatLocation(l) {
     return formatNumber(l.lat, 5) + '; ' + formatNumber(l.lon, 5);
+}
+
+function formatTimestamp(ts, longFormat) {
+    var format = longFormat ?
+        'ddd DD.MM.YYYY [um] HH:mm:ss [Uhr]' :
+        'DD.MM.YYYY HH:mm:ss';
+    return dayjs(ts).tz('Europe/Berlin').format(format)
 }
 
 function currentMeasurementHtml(sensor, series) {
