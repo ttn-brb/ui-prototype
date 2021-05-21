@@ -152,6 +152,9 @@ footer {
 .sensor-plot {
     width: 100%;
 }
+#show-all-sensors-block .btn {
+    font-size: 0.85rem;
+}
 
 @media screen and (max-height: 800px) and (min-width: 641px) {
     #sidebar {
@@ -189,4 +192,19 @@ footer {
     .side-block h3 {
         text-align: left;
     }
+}
+
+/*** Bootstrap Overrides ***/
+
+.btn {
+    border-radius: 0;
+}
+.btn-secondary {
+    background-color: #6D87AD;
+}
+.btn-secondary:hover {
+    background-color: #456490;
+}
+.btn-secondary:focus {
+    background-color: #6D87AD;
 }

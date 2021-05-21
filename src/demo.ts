@@ -105,7 +105,6 @@ export function randomSensors() : SensorMap {
                     lat: _.random(52.3846, 52.4589),
                     lon: _.random(12.4535, 12.6293),
                 },
-                primarySeriesId: 'temp',
                 series: randTypes(),
             }))
             .value(),

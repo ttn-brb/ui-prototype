@@ -27,7 +27,6 @@ export interface Sensor {
     token: string,
     description: string,
     series: SampleTypeMap,
-    primarySeriesId: string | null,
     location: Location | null,
 }
 

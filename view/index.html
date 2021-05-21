@@ -56,20 +56,24 @@
                     Klicke auf einen Sensor auf der Karte, um eine kurze Beschreibung und den Verlauf der gemessenen Werte einzublenden.
                 </p>
             </div>
-            <div id="sensor-details" class="side-block" style="display: none">
-                <h3>Sensor</h3>
-                <h4 class="sensor-name"></h4>
-                <p class="sensor-description"></p>
-                <div class="sensor-primary">
-                    <div class="measurement">
-                        <span class="measurement-label">Position</span>
-                        <span class="measurement-value sensor-location"></span>
-                    </div>
+            <div id="sensor-details" style="display: none">
+                <div class="side-block">
+                    <h3>Sensor</h3>
+                    <h4 class="sensor-name"></h4>
+                    <p class="sensor-description"></p>
+                    <h5>Position</h5>
+                    <div class="sensor-location"></div>
+                    <h5>Letzte Aktivität</h5>
+                    <div class="sensor-last-activity"></div>
+                    <h5>Aktuelle Werte</h5>
+                    <div class="sensor-series"></div>
+                    <h5>Wochenverlauf</h5>
+                    <div class="sensor-plot"></div>
                 </div>
-                <h5>Wochenverlauf</h5>
-                <div class="sensor-plot"></div>
-                <h5>Aktuelle Werte</h5>
-                <div class="sensor-series"></div>
+                <div id="show-all-sensors-block">
+                    <button class="btn btn-secondary" style="width:100%;"
+                        onclick="selectSeries(null)">Alle Sensoren anzeigen</button>
+                </div>
             </div>
         </div>
         <div id="map"></div>

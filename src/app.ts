@@ -49,10 +49,11 @@ export function setupApp() {
         const state = getState()
         const sensor = state.sensors[req.params.sensorId]
         const sensorData = state.sensorData[req.params.sensorId]
+        const sensorInfo = buildSensorInfo(sensor, sensorData)
         if (!sensor) {
             res.status(404).end()
         } else {
-            res.send({...sensor, ...sensorData})
+            res.send({...sensorInfo, ...sensorData})
         }
     })
 

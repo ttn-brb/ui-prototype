@@ -86,18 +86,26 @@ function formatTimestamp(ts, longFormat) {
 
 function currentMeasurementHtml(sensor, series) {
     if (!series) return;
-    var isPrimary = series.id == sensor.primarySeriesId;
     var labelHtml = '<span class="measurement-label">' +
         series.type.label +
         '</span>';
-    var valueHtml = '<span class="measurement-value">' +
-        formatNumber(_.get(_.last(series.samples), 'value'), 1) +
+    var latestSample = _.last(_.orderBy(sensor.data[series.id].samples, s => s.ts));
+    var latestTimestamp = latestSample ?
+        formatTimestamp(latestSample.ts) :
+        '';
+    var latestValue = latestSample ?
+        formatNumber(latestSample.value, 1) :
+        '&mdash;';
+    var valueHtml = '<span class="measurement-value" title="' +
+        latestTimestamp +
+        '">' +
+        latestValue +
         '&nbsp;' + series.type.unit +
         '</span>';
-    var additionalClass = isPrimary ? ' primary-measurement' : '';
+    var additionalClass = '';
     return '<div' +
         ' class="measurement interactive series-' + series.id + additionalClass + '"' +
-        ' onclick="showSeriesPlot(\'' + series.id + '\')"' +
+        ' onclick="selectSeries(\'' + series.id + '\')"' +
         '>' +
         labelHtml +
         valueHtml +
@@ -133,20 +141,32 @@ function createSeriesVegaLiteSpec(series) {
     };
 }
 
-function showSeriesPlot(seriesId) {
-    var ctx = window.ctx;
+function updateSeriesPlot(ctx) {
     var sensor = ctx.currentSensor;
+    var seriesId = ctx.currentSeriesId;
     var series = _.get(sensor, ['data', seriesId]);
-    if (!series) return;
-    ctx.currentSeriesId = seriesId;
-    $('.measurement').removeClass('selected-measurement');
-    $('.measurement.series-' + seriesId).addClass('selected-measurement');
-    vegaEmbed('#sensor-details .sensor-plot',
-        createSeriesVegaLiteSpec(series),
-        {
-            mode: 'vega-lite',
-            actions: false,
-        });
+    if (series) {
+        $('#show-all-sensors-block').show();
+        $('.measurement').removeClass('selected-measurement');
+        $('.measurement.series-' + seriesId).addClass('selected-measurement');
+        vegaEmbed('#sensor-details .sensor-plot',
+            createSeriesVegaLiteSpec(series),
+            {
+                mode: 'vega-lite',
+                actions: false,
+            });
+    } else {
+        $('#show-all-sensors-block').hide();
+        $('.measurement').removeClass('selected-measurement');
+        $('#sensor-details .sensor-plot').html('<em>Kein Messwert ausgewählt</em>');
+    }
+}
+
+function selectSeries(seriesId) {
+    var ctx = window.ctx;
+    ctx.currentSeriesId = seriesId
+    updateSeriesPlot(ctx);
+    updateMarker(ctx);
 }
 
 function showSensorInfo(ctx, sensorId) {
@@ -157,19 +177,17 @@ function showSensorInfo(ctx, sensorId) {
         $sd.find('.sensor-name').text(sensor.name);
         $sd.find('.sensor-description').text(sensor.description);
         $sd.find('.sensor-location').text(formatLocation(sensor.location));
+        var sensorInfo = ctx.sensors[sensorId];
+        $sd.find('.sensor-last-activity').text(formatTimestamp(sensorInfo.lastActivity, true));
 
         var $ss = $('#sensor-details .sensor-series').empty();
-        var ps = _.get(sensor, ['data', sensor.primarySeriesId]);
-        $ss.append(currentMeasurementHtml(sensor, ps));
 
         var series = _.orderBy(_.values(sensor.data), series => series.type.label);
         for (var s of series) {
-            if (s.id === sensor.primarySeriesId) continue;
             $ss.append(currentMeasurementHtml(sensor, s));
         }
         $sd.show();
-
-        showSeriesPlot(sensor.primarySeriesId);
+        updateSeriesPlot(ctx);
     });
 }
 
@@ -192,32 +210,72 @@ function markerMouseOutHandler(e) {
     marker.closePopup();
 }
 
-function loadSensors(ctx) {
+function updateMarker(ctx) {
+    // remove all currently existing markers
+    for (var m of ctx.markers) {
+        ctx.map.removeLayer(m);
+    }
+    ctx.markers = [];
+    // create new markers
     var minR = 3;
     var maxR = 40;
-    $.get('sensors', data => {
-        ctx.sensors = data;
-        for (var sensor of data) {
+    if (ctx.currentSeriesId) {
+        // add marker for current series
+        for (var sensor of _.values(ctx.sensors)) {
             var s = sensor;
-            var pv = s.primaryValue;
-            if (pv) {
-                var r = (pv.value - pv.min) / (pv.max - pv.min) * (maxR - minR) + minR;
-                var marker = L.circleMarker([s.location.lat, s.location.lon], {
-                    color: '#387ddf',
-                    weight: 2,
-                    fillColor: '#387ddf',
-                    fillOpacity: 0.5,
-                    radius: r,
-                });
-                marker.sensorId = s.id;
-                marker.on('click', markerClickHandler);
-                marker.on('mouseover', markerMouseOverHandler);
-                marker.on('mouseout', markerMouseOutHandler);
-                marker.bindPopup('<strong>' + s.name + '</strong><br>' +
-                    pv.label + ': ' + formatNumber(pv.value, 1) + '&nbsp;' + pv.unit);
-                marker.addTo(ctx.map);
-            }
+            var series = _.get(s.series, ctx.currentSeriesId);
+            if (!series || !series.lastSample) continue;
+
+            var v = {
+                value: series.lastSample.value,
+                min: series.defaultDomain.min,
+                max: series.defaultDomain.max
+            };
+            var r = (v.value - v.min) / (v.max - v.min) * (maxR - minR) + minR;
+            var marker = L.circleMarker([s.location.lat, s.location.lon], {
+                color: '#387ddf',
+                weight: 2,
+                fillColor: '#387ddf',
+                fillOpacity: 0.5,
+                radius: r,
+            });
+            marker.sensorId = s.id;
+            marker.on('click', markerClickHandler);
+            marker.on('mouseover', markerMouseOverHandler);
+            marker.on('mouseout', markerMouseOutHandler);
+            marker.bindPopup('<strong>' + s.name + '</strong><br>' +
+                series.label + ': ' + formatNumber(v.value, 1) + '&nbsp;' + series.unit);
+            marker.addTo(ctx.map);
+            ctx.markers.push(marker);
         }
+    } else {
+        // add marker for all sensors, visualizing the freshness
+        for (var sensor of _.values(ctx.sensors)) {
+            var s = sensor;
+            var r = s.freshness * (maxR - minR) + minR;
+            var marker = L.circleMarker([s.location.lat, s.location.lon], {
+                color: '#e12d6e',
+                weight: 2,
+                fillColor: '#e12d6e',
+                fillOpacity: 0.5,
+                radius: r,
+            });
+            marker.sensorId = s.id;
+            marker.on('click', markerClickHandler);
+            marker.on('mouseover', markerMouseOverHandler);
+            marker.on('mouseout', markerMouseOutHandler);
+            marker.bindPopup('<strong>' + s.name + '</strong><br>' +
+                'Letzte Aktivität: ' + formatTimestamp(s.lastActivity));
+            marker.addTo(ctx.map);
+            ctx.markers.push(marker);
+        }
+    }
+}
+
+function loadSensors(ctx) {
+    $.get('sensors', data => {
+        ctx.sensors = _.keyBy(data, 'id');
+        updateMarker(ctx);
     });
 }
 
@@ -229,7 +287,12 @@ $(function () {
     window.cfg = cfg;
 
     // initialize empty context for sensor data
-    var ctx = {};
+    var ctx = {
+        sensors: null, // map of sensors
+        currentSensor: null,
+        currentSeriesId: null,
+        markers: [],
+    };
     window.ctx = ctx;
 
     setupMap(ctx);
