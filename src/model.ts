@@ -25,6 +25,8 @@ export interface Sensor {
     id: string,
     contactName: string,
     contactEmail: string,
+    ttnApplicationId: string | null,
+    ttnDeviceId: string | null,
     name: string,
     token: string,
     description: string,

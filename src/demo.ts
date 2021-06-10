@@ -98,6 +98,8 @@ export function randomSensors() : SensorMap {
         _.chain(_.range(sensorCount))
             .map(i => ({
                 id: uuid.v4(),
+                ttnApplicationId: null,
+                ttnDeviceId: null,
                 name: `Sensor ${i}`,
                 token: uuid.v4({}),
                 contactName: 'Demo',
