@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import express from 'express'
-import Dayjs from 'dayjs'
+import asyncHandler  from 'express-async-handler'
+import dayjs from 'dayjs'
 import { log } from './logging'
 import { getState } from './state'
 import { writeSamples } from './influx'
@@ -23,7 +24,7 @@ export function setupApi() {
         type: '*/*', // do not require Content-Type=application/json header
     })
 
-    app.post('/sensors/:sensorId/series/:seriesId/sample', jsonParser, (req, res) => {
+    app.post('/sensors/:sensorId/series/:seriesId/sample', jsonParser, asyncHandler(async (req, res) => {
         const state = getState()
         const sensorId = _.get(req.params, 'sensorId')
         const seriesId = _.get(req.params, 'seriesId')
@@ -47,7 +48,7 @@ export function setupApi() {
             return
         }
 
-        const ts = Dayjs(_.get(req.body, 'ts'))
+        const ts = dayjs(_.get(req.body, 'ts'))
         const value = _.toNumber(_.get(req.body, 'value'))
         const sample = {
             ts: ts.toISOString(),
@@ -55,15 +56,15 @@ export function setupApi() {
             seriesId,
             value,
         }
-        log.verbose(`SAMPLE ${sensorId}/${seriesId} ${value}`)
-        writeSamples([sample]).then(
-            () => {
-                res.status(204).end()
-            },
-            error => {
-                res.status(500).send(error)
-            })
-    })
+        log.verbose(`SAMPLE ${sensor.name} ${sensor.id}/${seriesId} ${value}`)
+        try {
+            await writeSamples([sample])
+        } catch (err) {
+            res.status(500).send(err)
+            return
+        }
+        res.status(204).end()
+    }))
 
     return app
 }
