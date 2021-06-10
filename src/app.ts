@@ -11,8 +11,14 @@ const uiConfig = {
 }
 
 function httpLogging(req: express.Request, res: express.Response, next: express.NextFunction) {
+    const end = res.end
+    res.end = function() {
+        log.http(`${res.statusCode} - ${req.originalUrl}`)
+        res.end = end
+        res.end(...arguments)
+    }
+
     next()
-    log.http(`${res.statusCode} - ${req.originalUrl}`)
 }
 
 export function setupApp() {
