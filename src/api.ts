@@ -40,7 +40,7 @@ export function setupApi() {
             return
         }
         if (sensor.token !== token) {
-            res.status(403).end("Access to sensor denied.")
+            res.status(403).send("Access to sensor denied.")
             return
         }
         if (!_.has(sensor.series, seriesId)) {
