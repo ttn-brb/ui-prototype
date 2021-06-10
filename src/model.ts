@@ -23,6 +23,8 @@ export type SampleTypeMap = {
 
 export interface Sensor {
     id: string,
+    contactName: string,
+    contactEmail: string,
     name: string,
     token: string,
     description: string,

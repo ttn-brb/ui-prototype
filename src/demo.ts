@@ -100,6 +100,8 @@ export function randomSensors() : SensorMap {
                 id: uuid.v4(),
                 name: `Sensor ${i}`,
                 token: uuid.v4({}),
+                contactName: 'Demo',
+                contactEmail: 'demo@localhost',
                 description: `Eine Beschreibung für den Sensor ${i} und seine Fähigkeiten.`,
                 location: {
                     lat: _.random(52.3846, 52.4589),
