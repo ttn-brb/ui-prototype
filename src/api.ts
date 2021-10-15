@@ -107,7 +107,16 @@ export function setupApi() {
         const t = getTtnMessageTimestamp(req.body, rxMetadata) || dayjs()
         const samples = []
         for (const seriesId in sensor.series) {
-            const value = _.get(payload, seriesId)
+            let value = _.get(payload, seriesId)
+            if (!_.isNumber(value)) {
+                const aliases = _.get(sensor, ['seriesAliases', seriesId])
+                if (_.isArray(aliases)) {
+                    for (const alias of aliases) {
+                        value = _.get(payload, alias)
+                        if (_.isNumber(value)) break
+                    }
+                }
+            }
             if (!_.isNumber(value)) continue
             const sample = {
                 ts: t.toISOString(),

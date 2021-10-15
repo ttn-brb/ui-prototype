@@ -21,6 +21,10 @@ export type SampleTypeMap = {
     [key: string]: SampleType,
 }
 
+export type AliasMap = {
+    [key: string]: string[],
+}
+
 export interface Sensor {
     id: string,
     contactName: string,
@@ -31,6 +35,7 @@ export interface Sensor {
     token: string,
     description: string,
     series: SampleTypeMap,
+    seriesAliases: AliasMap | null,
     location: Location | null,
 }
 

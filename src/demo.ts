@@ -110,6 +110,7 @@ export function randomSensors() : SensorMap {
                     lon: _.random(12.4535, 12.6293),
                 },
                 series: randTypes(),
+                seriesAliases: {},
             }))
             .value(),
         'id')
