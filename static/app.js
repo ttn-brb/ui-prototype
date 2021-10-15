@@ -278,6 +278,7 @@ function onSensorSelectionChanged(e) {
     if (sensorId) {
         showSensorInfo(window.ctx, sensorId);
     } else {
+        selectSeries(null);
         hideSensorInfo(window.ctx);
     }
 }
