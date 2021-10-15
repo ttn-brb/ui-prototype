@@ -14,7 +14,7 @@ services:
       DOCKER_INFLUXDB_INIT_PASSWORD: mY53CreT
       DOCKER_INFLUXDB_INIT_ORG: ttn-brb
       DOCKER_INFLUXDB_INIT_BUCKET: ui-prototype-bucket
-      DOCKER_INFLUXDB_INIT_RETENTION: 1w  # https://docs.influxdata.com/influxdb/v2.0/organizations/buckets/create-bucket/
+      DOCKER_INFLUXDB_INIT_RETENTION: 365d  # https://docs.influxdata.com/influxdb/v2.0/organizations/buckets/create-bucket/
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: 59326c6f5809d991636e978acec2c8
 
   webserver:
