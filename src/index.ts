@@ -9,6 +9,7 @@ import { startReadingSamples } from './influxReader'
 
 dayjs.extend(duration)
 
+const SNAPSHOT_DELAY = dayjs.duration(_.get(process.env, 'SNAPSHOT_DELAY') || 'PT10S').asSeconds()
 const SNAPSHOT_INTERVAL = dayjs.duration(_.get(process.env, 'SNAPSHOT_INTERVAL') || 'PT1M').asSeconds()
 const DISPLAY_RANGE = dayjs.duration(_.get(process.env, 'DISPLAY_RANGE') || 'P7D').asSeconds()
 const DISPLAY_WINDOW = dayjs.duration(_.get(process.env, 'DISPLAY_WINDOW') || 'PT1H').asSeconds()
@@ -18,7 +19,7 @@ export function startServer() {
     const cliArgv = cliArgs()
     initializeLogging(cliArgv)
 
-    startReadingSamples(SNAPSHOT_INTERVAL, DISPLAY_RANGE, DISPLAY_WINDOW)
+    startReadingSamples(SNAPSHOT_DELAY, SNAPSHOT_INTERVAL, DISPLAY_RANGE, DISPLAY_WINDOW)
 
     const app = setupApp()
 
