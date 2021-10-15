@@ -170,6 +170,7 @@ function selectSeries(seriesId) {
 }
 
 function showSensorInfo(ctx, sensorId) {
+    $('#sensor-selection').val(sensorId);
     $.get('sensors/' + sensorId, sensor => {
         ctx.currentSensor = sensor;
         $('#intro-info').hide();
@@ -272,9 +273,29 @@ function updateMarker(ctx) {
     }
 }
 
+function onSensorSelectionChanged(e) {
+    var sensorId = e.value;
+    if (sensorId) {
+        showSensorInfo(window.ctx, sensorId);
+    } else {
+        hideSensorInfo(window.ctx);
+    }
+}
+
+function updateSensorDropDown(ctx) {
+    $('#sensor-selection option:gt(0)').remove();
+    var $e = $('#sensor-selection');
+    _.forEach(_.sortBy(_.values(ctx.sensors), s => s.name), s => {
+        $e.append($("<option></option>")
+            .attr("value", s.id)
+            .text(s.name));
+    });
+}
+
 function loadSensors(ctx) {
     $.get('sensors', data => {
         ctx.sensors = _.keyBy(data, 'id');
+        updateSensorDropDown(ctx);
         updateMarker(ctx);
     });
 }
