@@ -31,3 +31,4 @@ services:
       DISPLAY_WINDOW: PT1M
       DEMO_SAMPLE_INTERVAL: PT10S
       DEMO_SAMPLE_PROPABILITY: 50
+    command: ['--verbose']
