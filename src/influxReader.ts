@@ -12,10 +12,11 @@ function readSamplesForNow() {
     const now = dayjs()
     const start = now.subtract(rangeSize, 'seconds')
     const stop = now
+    log.verbose(`Reading samples between ${start.toISOString()} and ${stop.toISOString()}`)
     readSamplesAsync(start, stop, window).then(
         updateSensorData,
         error => {
-            log.error(error)
+            log.error("Failed to read samples from influx: " + error)
         })
 }
 
@@ -50,6 +51,7 @@ async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSec
         }
         sensorDataMap[sensor.id] = sensorData
     }
+    log.verbose(`Finished reading samples. ${_.size(requestTimes)} requests with ${_.round(_.mean(requestTimes))} ms average took ${_.round(_.sum(requestTimes) / 1000, 1)} s.`)
     return sensorDataMap
 }
 
@@ -62,7 +64,7 @@ export function startReadingSamples(delaySeconds: number, intervalSeconds: numbe
     interval = intervalSeconds * 1000
     rangeSize = rangeInSeconds
     window = windowInSeconds
-    readSamplesForNow()
+    log.verbose(`Setting up interval timer for sample reading every ${intervalSeconds} seconds`)
     intervalHandle = setTimeout(intervalWorker, delaySeconds * 1000)
 }
 
@@ -75,7 +77,7 @@ function intervalWorker() {
 
 export function stopReadingSamples() {
     if (intervalHandle === null) return
-    clearInterval(intervalHandle)
+    log.verbose("Destroy interval timer for sample reading")
     interval = null
     clearTimeout(intervalHandle)
     intervalHandle = null
