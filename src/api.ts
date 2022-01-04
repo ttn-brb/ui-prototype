@@ -6,6 +6,7 @@ import { log } from './logging'
 import { getState } from './state'
 import { writeSamples } from './influx'
 import { findTtnRxMetadata, getTtnMessageTimestamp } from './ttn'
+import { number } from 'yargs'
 
 function parseToken(auth: string | null | undefined) {
     if (!_.isString(auth)) return null
@@ -104,20 +105,29 @@ export function setupApi() {
 
         const payload = _.get(req.body, ['uplink_message', 'decoded_payload'])
 
+        function parseValue(v: any) {
+            if (typeof v === 'number') return v;
+            if (typeof v === 'string') {
+                const match = v.trim().match(/^\d+(\.\d*)?/)
+                return match ? Number.parseFloat(match[0]) : undefined
+            }
+            return undefined;
+        }
+
         const t = getTtnMessageTimestamp(req.body, rxMetadata) || dayjs()
         const samples = []
         for (const seriesId in sensor.series) {
-            let value = _.get(payload, seriesId)
-            if (!_.isNumber(value)) {
+            let value = parseValue(_.get(payload, seriesId))
+            if (typeof value !== 'number') {
                 const aliases = _.get(sensor, ['seriesAliases', seriesId])
                 if (_.isArray(aliases)) {
                     for (const alias of aliases) {
-                        value = _.get(payload, alias)
-                        if (_.isNumber(value)) break
+                        value = parseValue(_.get(payload, alias))
+                        if (typeof value === 'number') break
                     }
                 }
             }
-            if (!_.isNumber(value)) continue
+            if (typeof value !== 'number') continue
             const sample = {
                 ts: t.toISOString(),
                 sensorId: sensor.id,
