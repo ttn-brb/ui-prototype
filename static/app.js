@@ -119,25 +119,54 @@ function createSeriesVegaLiteSpec(series) {
         data: {
             values: series.samples,
         },
-        mark: {
-            type: 'line',
-            color: '#456490',
-        },
-        encoding: {
-            y: {
-                field: 'value',
-                type: 'quantitative',
-                title: null,
+        layer: [
+            {
+                mark: {
+                    type: 'line',
+                    color: '#45649050',
+                    interpolate: 'monotone',
+                },
+                transform: [
+                    { filter: 'isNumber(datum["value"])' },
+                ],
+                encoding: {
+                    y: {
+                        field: 'value',
+                        type: 'quantitative',
+                        title: null,
+                    },
+                    x: {
+                        field: 'ts',
+                        type: 'temporal',
+                        title: null,
+                        axis: {
+                            format: '%a',
+                        }
+                    },
+                },
             },
-            x: {
-                field: 'ts',
-                type: 'temporal',
-                title: null,
-                axis: {
-                    format: '%a',
-                }
+            {
+                mark: {
+                    type: 'line',
+                    color: '#456490FF',
+                },
+                encoding: {
+                    y: {
+                        field: 'value',
+                        type: 'quantitative',
+                        title: null,
+                    },
+                    x: {
+                        field: 'ts',
+                        type: 'temporal',
+                        title: null,
+                        axis: {
+                            format: '%a',
+                        }
+                    },
+                },
             },
-        },
+        ],
     };
 }
 
