@@ -1,0 +1,52 @@
+<%- include('parts/header', { bootScript: 'initializeSensorView()' }) %>
+<nav id="menu">
+    <div class="menu-section left">
+        <a href="/">Zurück zur Karte</a>
+        <a href="/sensors">Sensorliste</a>
+    </div>
+    <div class="menu-section right">
+        <select id="map-style">
+            <option value="" selected>OSM Standard</option>
+            <option value="osm-bright">OSM Bright</option>
+            <option value="map-tiler-basic">Map Tiler</option>
+            <option value="positron">Positron</option>
+            <option value="dark-matter">Dark Matter</option>
+        </select>
+    </div>
+</nav>
+<section id="page">
+    <div id="sidebar">
+        <div class="mb-3">
+            <select id="sensor-selection" class="form-control" onchange="onSensorSelectionChanged(this)">
+                <option value="" selected>kein Sensor ausgewählt</option>
+            </select>
+        </div>
+        <div id="intro-info" class="side-block">
+            <h3>Quick-Start</h3>
+            <p class="quick-start">
+                Klicke auf einen Sensor auf der Karte oder wähle im Auswahlfeld oben einen aus, um eine kurze Beschreibung und den Verlauf der gemessenen Werte einzublenden.
+            </p>
+        </div>
+        <div id="sensor-details" style="display: none">
+            <div class="side-block">
+                <h3>Sensor</h3>
+                <h4 class="sensor-name"></h4>
+                <p class="sensor-description"></p>
+                <h5>Position</h5>
+                <div class="sensor-location"></div>
+                <h5>Letzte Aktivität</h5>
+                <div class="sensor-last-activity"></div>
+                <h5>Aktuelle Werte</h5>
+                <div class="sensor-series"></div>
+                <h5>Wochenverlauf</h5>
+                <div class="sensor-plot"></div>
+            </div>
+            <div id="show-all-sensors-block">
+                <button class="btn btn-secondary" style="width:100%;"
+                    onclick="selectSeries(null)">Alle Sensoren anzeigen</button>
+            </div>
+        </div>
+    </div>
+    <div id="map"></div>
+</section>
+<%- include('parts/footer') %>

@@ -330,6 +330,19 @@ function loadSensors(ctx) {
     });
 }
 
+function updateSensorView(ctx) {
+    // update sensor detail info
+    // update series detail info
+    // update series chart
+}
+
+function loadSensor(ctx) {
+    $.get('api/v0/sensors/' + ctx.sensorId + '/info', data => {
+        ctx.sensorData = data;
+        updateSensorView(ctx);
+    });
+}
+
 function initConfiguration() {
     // initialize defaults for dynamic configuration
     var cfg = window.cfg || {
@@ -353,5 +366,20 @@ function initializeMapView() {
 
         setupMap(ctx);
         loadSensors(ctx);
+    });
+}
+
+function initializeSensorView(sensorId) {
+    $(function () {
+        initConfiguration();
+
+        // initialize empty context for sensor data
+        var ctx = {
+            sensorId: sensorId,
+            currentSeriesId: null,
+        };
+        window.ctx = ctx;
+
+        loadSensor(ctx);
     });
 }
