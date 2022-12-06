@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import dayjs, { Dayjs } from 'dayjs'
 import { log } from './logging'
-import { SensorData, SensorDataMap } from './model'
+import { Sensor, SensorData, SensorDataMap } from './model'
 import { getState, updateSensorData } from './state'
 import { readLastSample, readWindowAggregatedSamples } from './influx'
 
@@ -20,22 +20,40 @@ function readSamplesForNow() {
         })
 }
 
+async function inSeries<T, R>(fn: (item: T) => Promise<R>, items: T[]): Promise<R[]> {
+    const results = []
+    for (const item of items) {
+        results.push(await fn(item))
+    }
+    return results
+}
+
+async function inParallel<T, R>(fn: (item: T) => Promise<R>, items: T[]): Promise<R[]> {
+    const results = []
+    const tasks = items.map(fn)
+    for (const task of tasks) {
+        results.push(await task)
+    }
+    return results
+}
+
 async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSeconds: number) {
-    const state = getState()
+    const requestTimes: number[] = []
     const sensorDataMap : SensorDataMap = {}
-    const requestTimes = []
-    for (const sensor of _.values(state.sensors)) {
+
+    async function loadSensorData(sensor: Sensor) {
         const sensorData: SensorData = {
             track: null,
             data: {}
         }
-        for (const seriesId of _.keys(sensor.series)) {
-            const sampleType = sensor.series[seriesId]
+
+        async function loadSeriesData(seriesId: string) {
             const t0 = dayjs()
             const samples = await readWindowAggregatedSamples(sensor.id, seriesId, rangeStart, rangeStop, windowInSeconds)
             const lastSample = await readLastSample(sensor.id, seriesId, rangeStart)
             const td = dayjs().diff(t0, 'milliseconds')
             requestTimes.push(td)
+            const sampleType = sensor.series[seriesId]
             sensorData.data[seriesId] = {
                 id: seriesId,
                 type: sampleType,
@@ -49,9 +67,16 @@ async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSec
                 } : undefined,
             }
         }
+
+        await inParallel(loadSeriesData, _.keys(sensor.series))
         sensorDataMap[sensor.id] = sensorData
     }
-    log.verbose(`Finished reading samples. ${_.size(requestTimes)} requests with ${_.round(_.mean(requestTimes))} ms average took ${_.round(_.sum(requestTimes) / 1000, 1)} s.`)
+
+    const state = getState()
+    const t0 = dayjs()
+    await inSeries(loadSensorData, _.values(state.sensors))
+    const tTotal = dayjs().diff(t0, 'milliseconds')
+    log.verbose(`Finished reading samples. ${_.size(requestTimes)} requests with ${_.round(_.mean(requestTimes))} ms average took ${_.round(tTotal / 1000, 1)} s.`)
     return sensorDataMap
 }
 
