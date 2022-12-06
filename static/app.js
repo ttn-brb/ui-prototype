@@ -200,7 +200,7 @@ function selectSeries(seriesId) {
 
 function showSensorInfo(ctx, sensorId) {
     $('#sensor-selection').val(sensorId);
-    $.get('sensors/' + sensorId, sensor => {
+    $.get('api/v0/sensors/' + sensorId + '/info', sensor => {
         ctx.currentSensor = sensor;
         $('#intro-info').hide();
         var $sd = $('#sensor-details');
@@ -323,29 +323,35 @@ function updateSensorDropDown(ctx) {
 }
 
 function loadSensors(ctx) {
-    $.get('sensors', data => {
+    $.get('api/v0/sensors/info', data => {
         ctx.sensors = _.keyBy(data, 'id');
         updateSensorDropDown(ctx);
         updateMarker(ctx);
     });
 }
 
-$(function () {
+function initConfiguration() {
     // initialize defaults for dynamic configuration
     var cfg = window.cfg || {
         styledTileServer: 'https://tiles.ttn-brb.de'
     };
     window.cfg = cfg;
+}
 
-    // initialize empty context for sensor data
-    var ctx = {
-        sensors: null, // map of sensors
-        currentSensor: null,
-        currentSeriesId: null,
-        markers: [],
-    };
-    window.ctx = ctx;
+function initializeMapView() {
+    $(function () {
+        initConfiguration();
 
-    setupMap(ctx);
-    loadSensors(ctx);
-});
+        // initialize empty context for sensor data
+        var ctx = {
+            sensors: null, // map of sensors
+            currentSensor: null,
+            currentSeriesId: null,
+            markers: [],
+        };
+        window.ctx = ctx;
+
+        setupMap(ctx);
+        loadSensors(ctx);
+    });
+}

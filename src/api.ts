@@ -4,9 +4,9 @@ import asyncHandler  from 'express-async-handler'
 import dayjs from 'dayjs'
 import { log } from './logging'
 import { getState } from './state'
+import { buildSensorInfo } from './data'
 import { writeSamples } from './influx'
 import { findTtnRxMetadata, getTtnMessageTimestamp } from './ttn'
-import { number } from 'yargs'
 
 function parseToken(auth: string | null | undefined) {
     if (!_.isString(auth)) return null
@@ -24,6 +24,26 @@ export function setupApi() {
         limit: '10kb',
         strict: true, // accept only arrays and objects
         type: '*/*', // do not require Content-Type=application/json header
+    })
+
+    app.get('/sensors/info', (req, res) => {
+        const state = getState()
+        const sensors = state.sensors
+        const sensorInfos = _.map(sensors,
+            sensor => buildSensorInfo(sensor, state.sensorData[sensor.id]))
+        res.send(sensorInfos)
+    })
+
+    app.get('/sensors/:sensorId/info', (req, res) => {
+        const state = getState()
+        const sensor = state.sensors[req.params.sensorId]
+        const sensorData = state.sensorData[req.params.sensorId]
+        const sensorInfo = buildSensorInfo(sensor, sensorData)
+        if (!sensor) {
+            res.status(404).end()
+        } else {
+            res.send({...sensorInfo, ...sensorData})
+        }
     })
 
     app.post('/sensors/:sensorId/series/:seriesId/sample', jsonParser, asyncHandler(async (req, res) => {
