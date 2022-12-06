@@ -1,0 +1,30 @@
+<%- include('parts/header', { bootScript: null }) %>
+<nav id="menu">
+    <div class="menu-section left">
+        <a href="/">Zurück zur Karte</a>
+    </div>
+    <div class="menu-section right">
+    </div>
+</nav>
+<section id="page">
+    <div id="sensor-list">
+        <h3>Sensoren</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Beschreibung</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (const sensor of sensors) { %>
+                <tr>
+                    <td><%= sensor.name %></td>
+                    <td><%= sensor.description %></td>
+                </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</section>
+<%- include('parts/footer') %>

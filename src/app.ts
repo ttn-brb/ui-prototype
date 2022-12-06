@@ -40,5 +40,15 @@ export function setupApp() {
         res.send(`window.cfg = ${JSON.stringify(uiConfig, null, '  ')};`)
     })
 
+    app.get('/sensors', (req, res) => {
+        const state = getState()
+        const sensors = state.sensors
+        const sensorInfos = _.map(
+            _.orderBy(sensors, 'name'),
+            sensor => buildSensorInfo(sensor, state.sensorData[sensor.id]))
+
+        res.render('sensor-list', { sensors: sensorInfos })
+    })
+
     return app
 }
