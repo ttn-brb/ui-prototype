@@ -193,6 +193,9 @@ td.sensor-description {
 .mini-map {
     height: 13rem;
 }
+#sensor-plot {
+    width: calc(100% - 1rem);
+}
 
 @media screen and (max-height: 800px) and (min-width: 641px) {
     #sidebar {

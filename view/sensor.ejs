@@ -34,13 +34,28 @@
             <div id="map" class="mini-map"></div>
             <div class="sensor-location text-center"></div>
         </div>
+
     </div>
     <div id="sensor-details" class="main-area">
         <div class="container">
             <h2>Werteverlauf</h2>
-            <p>TODO: Formular für Datenauswahl</p>
+            <div class="form-inline">
+                <label for="series-selection" class="mb-2 mr-sm-2">Kanal</label>
+                <select id="series-selection" class="form-control mb-2 mr-sm-4"
+                    onchange="onSeriesSelectionChanged(this)">
+                    <option value="" selected>kein Kanal ausgewählt</option>
+                </select>
+                <label for="plot-start" class="mb-2 mr-sm-2">von</label>
+                <input id="plot-start" type="datetime-local" class="form-control mb-2 mr-sm-2"
+                    placeholder="Anfang" />
+
+                <label for="plot-end" class="mb-2 mr-sm-2">bis</label>
+                <input id="plot-end" type="datetime-local" class="form-control mb-2 mr-sm-2"
+                    placeholder="Ende" />
+            </div>
+            <div id="sensor-plot" class="mt-4 mb-4"></div>
             <h2>Datendownload</h2>
-            <p>TODO: Formular für Zeitbereich und Fensterung</p>
+            <p>TODO: Formular für Zeitbereich und Fensterung des Download</p>
         </div>
     </div>
 </section>

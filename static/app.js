@@ -120,7 +120,7 @@ function currentMeasurementHtml(sensor, series) {
         '</div>';
 }
 
-function createSeriesVegaLiteSpec(series) {
+function createSeriesMiniPlotVegaLiteSpec(series) {
     return {
         width: 'container',
         height: 90,
@@ -178,7 +178,7 @@ function createSeriesVegaLiteSpec(series) {
     };
 }
 
-function updateSeriesPlot(ctx) {
+function updateSeriesMiniPlot(ctx) {
     var sensor = ctx.currentSensor;
     var seriesId = ctx.currentSeriesId;
     var series = _.get(sensor, ['data', seriesId]);
@@ -186,8 +186,8 @@ function updateSeriesPlot(ctx) {
         $('#show-all-sensors-block').show();
         $('.measurement').removeClass('selected-measurement');
         $('.measurement.series-' + seriesId).addClass('selected-measurement');
-        vegaEmbed('#sensor-details .sensor-plot',
-            createSeriesVegaLiteSpec(series),
+        var spec = createSeriesMiniPlotVegaLiteSpec(series);
+        vegaEmbed('#sensor-details .sensor-plot', spec,
             {
                 mode: 'vega-lite',
                 actions: false,
@@ -199,15 +199,91 @@ function updateSeriesPlot(ctx) {
     }
 }
 
+function createSeriesVegaLiteSpec(series) {
+    return {
+        width: 'container',
+        height: 220,
+        data: {
+            values: series.samples,
+        },
+        layer: [
+            {
+                mark: {
+                    type: 'line',
+                    color: '#45649050',
+                    interpolate: 'monotone',
+                },
+                transform: [
+                    { filter: 'isNumber(datum["value"])' },
+                ],
+                encoding: {
+                    y: {
+                        field: 'value',
+                        type: 'quantitative',
+                        title: null,
+                    },
+                    x: {
+                        field: 'ts',
+                        type: 'temporal',
+                        title: null,
+                        axis: {
+                            format: '%a',
+                        }
+                    },
+                },
+            },
+            {
+                mark: {
+                    type: 'line',
+                    color: '#456490FF',
+                },
+                encoding: {
+                    y: {
+                        field: 'value',
+                        type: 'quantitative',
+                        title: null,
+                    },
+                    x: {
+                        field: 'ts',
+                        type: 'temporal',
+                        title: null,
+                        axis: {
+                            format: '%a',
+                        }
+                    },
+                },
+            },
+        ],
+    };
+}
+
+function updateSeriesPlot(ctx) {
+    var sensor = ctx.sensor;
+    var seriesId = ctx.currentSeriesId;
+    var series = _.get(sensor, ['data', seriesId]);
+    if (series) {
+        var spec = createSeriesVegaLiteSpec(series);
+        spec.height = 220;
+        vegaEmbed('#sensor-plot', spec,
+            {
+                mode: 'vega-lite',
+                actions: false,
+            });
+    } else {
+        $('#sensor-plot').html('<em>Kein Kanal ausgewählt</em>');
+    }
+}
+
 function selectSeries(seriesId) {
     var ctx = window.ctx;
     ctx.currentSeriesId = seriesId
     if (ctx.view === 'home') {
-        updateSeriesPlot(ctx);
+        updateSeriesMiniPlot(ctx);
         updateMarker(ctx);
     }
     if (ctx.view === 'sensor') {
-        console.warn('TODO selectSeries on sensor view');
+        $('#series-selection').val(seriesId);
+        updateSeriesPlot(ctx);
     }
 }
 
@@ -230,7 +306,7 @@ function showSensorInfo(ctx, sensorId) {
             $ss.append(currentMeasurementHtml(sensor, s));
         }
         $sd.show();
-        updateSeriesPlot(ctx);
+        updateSeriesMiniPlot(ctx);
     });
 }
 
@@ -377,12 +453,66 @@ function updateSensorView(ctx) {
     // update series chart
 }
 
+function onSeriesSelectionChanged(e) {
+    var seriesId = e.value;
+    if (seriesId) {
+        selectSeries(seriesId);
+    } else {
+        selectSeries(null);
+    }
+}
+
+function updateSeriesDropDown(ctx) {
+    $('#series-selection option:gt(0)').remove();
+    var $e = $('#series-selection');
+    _.forEach(_.sortBy(_.values(ctx.sensor.series), s => s.label), s => {
+        $e.append($("<option></option>")
+            .attr("value", s.id)
+            .text(s.label));
+    });
+}
+
 function loadSensor(ctx) {
     $.get('/api/v0/sensors/' + ctx.sensorId + '/info', data => {
         ctx.sensor = data;
         updateSensorView(ctx);
+        updateSeriesDropDown(ctx);
         updateMarker(ctx);
+        updateSeriesPlot(ctx);
     });
+}
+
+function initializeDateRangePicker(start, end) {
+
+    if (start.value) {
+        end.min = start.value;
+    }
+    if (end.value) {
+        start.max = end.value;
+    }
+
+    $(start).on('change', e => {
+        if (e.target.value) {
+            end.min = e.target.value;
+        } else {
+            end.min = null;
+        }
+    })
+    $(end).on('change', e => {
+        if (e.target.value) {
+            start.max = e.target.value;
+        } else {
+            start.max = null;
+        }
+    })
+
+    end.value = new Date().toISOString().substring(0, 16);
+}
+
+function initializeDateSelection() {
+    var plotStart = $('#plot-start')[0];
+    var plotEnd = $('#plot-end')[0];
+    initializeDateRangePicker(plotStart, plotEnd);
 }
 
 function initConfiguration() {
@@ -397,7 +527,7 @@ function initializeMapView() {
     $(function () {
         initConfiguration();
 
-        // initialize empty context for sensor data
+        // initialize empty context
         var ctx = {
             view: 'home',
             sensors: null, // map of sensors
@@ -416,7 +546,7 @@ function initializeSensorView(sensorId) {
     $(function () {
         initConfiguration();
 
-        // initialize empty context for sensor data
+        // initialize empty context
         var ctx = {
             view: 'sensor',
             sensorId: sensorId,
@@ -425,6 +555,7 @@ function initializeSensorView(sensorId) {
         };
         window.ctx = ctx;
 
+        initializeDateSelection();
         setupMap(ctx);
         loadSensor(ctx);
     });
