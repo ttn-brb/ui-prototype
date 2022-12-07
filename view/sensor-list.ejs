@@ -7,24 +7,47 @@
     </div>
 </nav>
 <section id="page">
-    <div id="sensor-list">
+    <div id="sensor-list" class="container">
         <h3>Sensoren</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Beschreibung</th>
-                </tr>
-            </thead>
+        <table class="table">
             <tbody>
                 <% for (const sensor of sensors) { %>
-                <tr>
-                    <td><%= sensor.name %></td>
+                <tr class="clickable" data-click-group="<%= sensor.id %>" data-click-href="/sensors/<%= sensor.id %>">
+                    <th style="white-space: nowrap;"><%= sensor.name %></th>
                     <td><%= sensor.description %></td>
+                    <td>
+                        <a href="/sensors/<%= sensor.id %>" title="Detailansicht"><i class="fa fa-search"></i></a>
+                    </td>
+                </tr>
+                <tr class="clickable" data-click-group="<%= sensor.id %>">
+                    <td colspan="3" class="sensor-description">
+                        <%= Object.values(sensor.series).map(st => st.label).join(', ') %>
+                    </td>
                 </tr>
                 <% } %>
             </tbody>
         </table>
     </div>
 </section>
+<script>
+    $(function () {
+        function clickGroupOf(e) {
+            return $(e.currentTarget).data('click-group');
+        }
+        function $allOfClickGroup(e) {
+            const group = clickGroupOf(e);
+            return $('.clickable[data-click-group="' + group + '"');
+        }
+        $('tr.clickable').on('mouseover', e => {
+            $allOfClickGroup(e).addClass('hover');
+        });
+        $('tr.clickable').on('mouseout', e => {
+            $allOfClickGroup(e).removeClass('hover');
+        });
+        $('tr.clickable').on('click', e => {
+            const href = $allOfClickGroup(e).filter('.clickable[data-click-href]').first().data('click-href');
+            document.location.href = href;
+        });
+    });
+</script>
 <%- include('parts/footer') %>

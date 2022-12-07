@@ -39,7 +39,13 @@ function createBasemap(style) {
 function updateMap(ctx, style) {
     var map = ctx.map;
     if (!map) {
-        map = ctx.map = L.map('map').setView([52.41563, 12.54754], 13);
+        var options = {}
+        if (ctx.view === 'sensor') {
+            options.attributionControl = false;
+            options.zoomControl = false;
+        }
+        map = ctx.map = L.map('map', options);
+        map.setView([52.41563, 12.54754], 13);
         initializeMap(ctx);
     }
     var mapStyle = ctx.mapStyle || 'initial';
@@ -55,9 +61,11 @@ function updateMap(ctx, style) {
 }
 
 function initializeMap(ctx) {
-    ctx.map.on('click', function () {
-        hideSensorInfo(ctx);
-    });
+    if (ctx.view === 'home') {
+        ctx.map.on('click', function () {
+            hideSensorInfo(ctx);
+        });
+    }
 }
 
 function setupMap(ctx) {
@@ -194,13 +202,18 @@ function updateSeriesPlot(ctx) {
 function selectSeries(seriesId) {
     var ctx = window.ctx;
     ctx.currentSeriesId = seriesId
-    updateSeriesPlot(ctx);
-    updateMarker(ctx);
+    if (ctx.view === 'home') {
+        updateSeriesPlot(ctx);
+        updateMarker(ctx);
+    }
+    if (ctx.view === 'sensor') {
+        console.warn('TODO selectSeries on sensor view');
+    }
 }
 
 function showSensorInfo(ctx, sensorId) {
     $('#sensor-selection').val(sensorId);
-    $.get('api/v0/sensors/' + sensorId + '/info', sensor => {
+    $.get('/api/v0/sensors/' + sensorId + '/info', sensor => {
         ctx.currentSensor = sensor;
         $('#intro-info').hide();
         var $sd = $('#sensor-details');
@@ -227,6 +240,13 @@ function hideSensorInfo(ctx) {
     $('#intro-info').show();
 }
 
+function gotoDetailView(ctx) {
+    ctx = ctx || window.ctx;
+    if (ctx.currentSensor) {
+        document.location.href = '/sensors/' + ctx.currentSensor.id;
+    }
+}
+
 function markerClickHandler(e) {
     var marker = e.target;
     showSensorInfo(window.ctx, marker.sensorId);
@@ -249,56 +269,64 @@ function updateMarker(ctx) {
     // create new markers
     var minR = 3;
     var maxR = 40;
-    if (ctx.currentSeriesId) {
-        // add marker for current series
-        for (var sensor of _.values(ctx.sensors)) {
-            var s = sensor;
-            var series = _.get(s.series, ctx.currentSeriesId);
-            if (!series || !series.lastSample) continue;
+    if (ctx.view === 'home') {
+        if (ctx.currentSeriesId) {
+            // add marker for current series
+            for (var sensor of _.values(ctx.sensors)) {
+                var s = sensor;
+                var series = _.get(s.series, ctx.currentSeriesId);
+                if (!series || !series.lastSample) continue;
 
-            var v = {
-                value: series.lastSample.value,
-                min: series.defaultDomain.min,
-                max: series.defaultDomain.max
-            };
-            var r = (v.value - v.min) / (v.max - v.min) * (maxR - minR) + minR;
-            var marker = L.circleMarker([s.location.lat, s.location.lon], {
-                color: '#387ddf',
-                weight: 2,
-                fillColor: '#387ddf',
-                fillOpacity: 0.5,
-                radius: r,
-            });
-            marker.sensorId = s.id;
-            marker.on('click', markerClickHandler);
-            marker.on('mouseover', markerMouseOverHandler);
-            marker.on('mouseout', markerMouseOutHandler);
-            marker.bindPopup('<strong>' + s.name + '</strong><br>' +
-                series.label + ': ' + formatNumber(v.value, 1) + '&nbsp;' + series.unit);
-            marker.addTo(ctx.map);
-            ctx.markers.push(marker);
+                var v = {
+                    value: series.lastSample.value,
+                    min: series.defaultDomain.min,
+                    max: series.defaultDomain.max
+                };
+                var r = (v.value - v.min) / (v.max - v.min) * (maxR - minR) + minR;
+                var marker = L.circleMarker([s.location.lat, s.location.lon], {
+                    color: '#387ddf',
+                    weight: 2,
+                    fillColor: '#387ddf',
+                    fillOpacity: 0.5,
+                    radius: r,
+                });
+                marker.sensorId = s.id;
+                marker.on('click', markerClickHandler);
+                marker.on('mouseover', markerMouseOverHandler);
+                marker.on('mouseout', markerMouseOutHandler);
+                marker.bindPopup('<strong>' + s.name + '</strong><br>' +
+                    series.label + ': ' + formatNumber(v.value, 1) + '&nbsp;' + series.unit);
+                marker.addTo(ctx.map);
+                ctx.markers.push(marker);
+            }
+        } else {
+            // add marker for all sensors, visualizing the freshness
+            for (var sensor of _.values(ctx.sensors)) {
+                var s = sensor;
+                var r = s.freshness * (maxR - minR) + minR;
+                var marker = L.circleMarker([s.location.lat, s.location.lon], {
+                    color: '#e12d6e',
+                    weight: 2,
+                    fillColor: '#e12d6e',
+                    fillOpacity: 0.5,
+                    radius: r,
+                });
+                marker.sensorId = s.id;
+                marker.on('click', markerClickHandler);
+                marker.on('mouseover', markerMouseOverHandler);
+                marker.on('mouseout', markerMouseOutHandler);
+                marker.bindPopup('<strong>' + s.name + '</strong><br>' +
+                    'Letzte Aktivität: ' + formatTimestamp(s.lastActivity));
+                marker.addTo(ctx.map);
+                ctx.markers.push(marker);
+            }
         }
-    } else {
-        // add marker for all sensors, visualizing the freshness
-        for (var sensor of _.values(ctx.sensors)) {
-            var s = sensor;
-            var r = s.freshness * (maxR - minR) + minR;
-            var marker = L.circleMarker([s.location.lat, s.location.lon], {
-                color: '#e12d6e',
-                weight: 2,
-                fillColor: '#e12d6e',
-                fillOpacity: 0.5,
-                radius: r,
-            });
-            marker.sensorId = s.id;
-            marker.on('click', markerClickHandler);
-            marker.on('mouseover', markerMouseOverHandler);
-            marker.on('mouseout', markerMouseOutHandler);
-            marker.bindPopup('<strong>' + s.name + '</strong><br>' +
-                'Letzte Aktivität: ' + formatTimestamp(s.lastActivity));
-            marker.addTo(ctx.map);
-            ctx.markers.push(marker);
-        }
+    } else if (ctx.view === 'sensor' && ctx.sensor) {
+        // add marker for sensor location only
+        var s = ctx.sensor;
+        var marker = L.marker([s.location.lat, s.location.lon]);
+        marker.addTo(ctx.map);
+        ctx.markers.push(marker);
     }
 }
 
@@ -323,7 +351,7 @@ function updateSensorDropDown(ctx) {
 }
 
 function loadSensors(ctx) {
-    $.get('api/v0/sensors/info', data => {
+    $.get('/api/v0/sensors/info', data => {
         ctx.sensors = _.keyBy(data, 'id');
         updateSensorDropDown(ctx);
         updateMarker(ctx);
@@ -331,15 +359,29 @@ function loadSensors(ctx) {
 }
 
 function updateSensorView(ctx) {
+    ctx.map.setView(ctx.sensor.location, 13);
+    var $sb = $('#sidebar');
+    if (ctx.sensor) {
+        var sensor = ctx.sensor;
+        $sb.find('.sensor-last-activity').text(formatTimestamp(sensor.lastActivity, true));
+        $sb.find('.sensor-location').text(formatLocation(sensor.location));
+        var $ss = $sb.find('.sensor-series').empty();
+        var series = _.orderBy(_.values(sensor.data), series => series.type.label);
+        for (var s of series) {
+            $ss.append(currentMeasurementHtml(sensor, s));
+        }
+    }
+
     // update sensor detail info
     // update series detail info
     // update series chart
 }
 
 function loadSensor(ctx) {
-    $.get('api/v0/sensors/' + ctx.sensorId + '/info', data => {
-        ctx.sensorData = data;
+    $.get('/api/v0/sensors/' + ctx.sensorId + '/info', data => {
+        ctx.sensor = data;
         updateSensorView(ctx);
+        updateMarker(ctx);
     });
 }
 
@@ -357,6 +399,7 @@ function initializeMapView() {
 
         // initialize empty context for sensor data
         var ctx = {
+            view: 'home',
             sensors: null, // map of sensors
             currentSensor: null,
             currentSeriesId: null,
@@ -375,11 +418,14 @@ function initializeSensorView(sensorId) {
 
         // initialize empty context for sensor data
         var ctx = {
+            view: 'sensor',
             sensorId: sensorId,
             currentSeriesId: null,
+            markers: [],
         };
         window.ctx = ctx;
 
+        setupMap(ctx);
         loadSensor(ctx);
     });
 }

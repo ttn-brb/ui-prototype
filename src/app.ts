@@ -15,9 +15,8 @@ function httpLogging(req: express.Request, res: express.Response, next: express.
     res.end = function() {
         log.http(`${res.statusCode} - ${req.originalUrl}`)
         res.end = end
-        res.end(...arguments)
+        return res.end(...arguments)
     }
-
     next()
 }
 
@@ -48,6 +47,18 @@ export function setupApp() {
             sensor => buildSensorInfo(sensor, state.sensorData[sensor.id]))
 
         res.render('sensor-list', { sensors: sensorInfos })
+    })
+
+    app.get('/sensors/:sensorId', (req, res) => {
+        const state = getState()
+        const sensor = state.sensors[req.params.sensorId]
+        const sensorData = state.sensorData[req.params.sensorId]
+        const sensorInfo = buildSensorInfo(sensor, sensorData)
+        if (!sensor) {
+            res.status(404).end()
+        } else {
+            res.render('sensor', { sensor: sensorInfo })
+        }
     })
 
     return app

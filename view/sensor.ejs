@@ -1,4 +1,4 @@
-<%- include('parts/header', { bootScript: 'initializeSensorView()' }) %>
+<%- include('parts/header', { bootScript: `initializeSensorView("${sensor.id}")` }) %>
 <nav id="menu">
     <div class="menu-section left">
         <a href="/">Zurück zur Karte</a>
@@ -16,37 +16,32 @@
 </nav>
 <section id="page">
     <div id="sidebar">
-        <div class="mb-3">
-            <select id="sensor-selection" class="form-control" onchange="onSensorSelectionChanged(this)">
-                <option value="" selected>kein Sensor ausgewählt</option>
-            </select>
-        </div>
-        <div id="intro-info" class="side-block">
-            <h3>Quick-Start</h3>
-            <p class="quick-start">
-                Klicke auf einen Sensor auf der Karte oder wähle im Auswahlfeld oben einen aus, um eine kurze Beschreibung und den Verlauf der gemessenen Werte einzublenden.
-            </p>
-        </div>
-        <div id="sensor-details" style="display: none">
+
+        <div id="sensor-info">
             <div class="side-block">
                 <h3>Sensor</h3>
-                <h4 class="sensor-name"></h4>
-                <p class="sensor-description"></p>
-                <h5>Position</h5>
-                <div class="sensor-location"></div>
+                <h4><%= sensor.name %></h4>
+                <p class="sensor-description"><%= sensor.description %></p>
                 <h5>Letzte Aktivität</h5>
-                <div class="sensor-last-activity"></div>
+                <div class="sensor-last-activity">&nbsp;</div>
                 <h5>Aktuelle Werte</h5>
                 <div class="sensor-series"></div>
-                <h5>Wochenverlauf</h5>
-                <div class="sensor-plot"></div>
-            </div>
-            <div id="show-all-sensors-block">
-                <button class="btn btn-secondary" style="width:100%;"
-                    onclick="selectSeries(null)">Alle Sensoren anzeigen</button>
             </div>
         </div>
+
+        <div id="sensor-position" class="side-block">
+            <h3>Position</h3>
+            <div id="map" class="mini-map"></div>
+            <div class="sensor-location text-center"></div>
+        </div>
     </div>
-    <div id="map"></div>
+    <div id="sensor-details" class="main-area">
+        <div class="container">
+            <h2>Werteverlauf</h2>
+            <p>TODO: Formular für Datenauswahl</p>
+            <h2>Datendownload</h2>
+            <p>TODO: Formular für Zeitbereich und Fensterung</p>
+        </div>
+    </div>
 </section>
 <%- include('parts/footer') %>

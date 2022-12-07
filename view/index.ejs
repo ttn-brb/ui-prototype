@@ -31,6 +31,8 @@
                 <h3>Sensor</h3>
                 <h4 class="sensor-name"></h4>
                 <p class="sensor-description"></p>
+                <button id="goto-details-button" class="btn btn-secondary"
+                    onclick="gotoDetailView()">Details</button>
                 <h5>Position</h5>
                 <div class="sensor-location"></div>
                 <h5>Letzte Aktivität</h5>
@@ -46,6 +48,6 @@
             </div>
         </div>
     </div>
-    <div id="map"></div>
+    <div id="map" class="main-area"></div>
 </section>
 <%- include('parts/footer') %>
