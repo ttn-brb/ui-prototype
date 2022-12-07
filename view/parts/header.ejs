@@ -7,28 +7,12 @@
 
     <title>TTN User Group Brandenburg a. d. Havel – UI Prototyp</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <%- include('vendor') %>
 
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.4/dayjs.min.js" integrity="sha256-NTsR4SOm3YHfJrmrmvBtEYqfQ6jQ5yvEKMhgQe3DIl0=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.4/locale/de.js" integrity="sha256-89lO5+Yj5jggMXiRgWI8PwRVOH2KjXYckkTYgPoLMec=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.4/plugin/utc.js" integrity="sha256-v3ECxXAznGazhiqPl5tTtC1FqxuFJmiw/F1Udrp66JY=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.4/plugin/timezone.js" integrity="sha256-748j1weSfNu3FDyRmcowLHF0ZVVRmTN1M9g6g/SBK+c=" crossorigin="anonymous"></script>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha256-T/zFmO5s/0aSwc6ics2KLxlfbewyRz6UNw1s3Ppf5gE=" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" integrity="sha256-7dA7lq5P94hkBsWdff7qobYkp9ope/L5LQy2t/ljPLo=" crossorigin="anonymous"></script>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" integrity="sha256-BPfK9M5v34c2XP6p0cxVz1mUQLst0gTLk0mlc7kuodA=" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js" integrity="sha256-yDc0eil8GjWFKqN1OSzHSVCiuGghTosZCcRje4tj7iQ=" crossorigin="anonymous"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/vega@5.20.0/build/vega.min.js" integrity="sha256-9lnHJ14X+HaXfaJFBx5zIfnsqeZKJmBJV3M7W7DU8sQ=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.0.0/build/vega-lite.min.js" integrity="sha256-tJA45o3QEAtIUn1qem3mlEH6Gu8SfCw5sDDxIfj4n/o=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.17.0/build/vega-embed.min.js" integrity="sha256-M7BJ5hIB1qIxXvE8c6a5sVTRarmSYq+1MnbblMcZEmQ=" crossorigin="anonymous"></script>
-
-    <link rel="shortcut icon" type="image/x-icon" href="favico.ico">
-    <link rel="stylesheet" href="app.css">
-    <script src="config.js"></script>
-    <script src="app.js"></script>
+    <link rel="shortcut icon" type="image/x-icon" href="/favico.ico">
+    <link rel="stylesheet" href="/app.css">
+    <script src="/config.js"></script>
+    <script src="/app.js"></script>
     <% if (bootScript) { %><script><%- bootScript %></script><% } %>
 </head>
 <body>
