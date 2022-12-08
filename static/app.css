@@ -239,6 +239,16 @@ td.sensor-description {
 
 .btn {
     border-radius: 0;
+    border: none;
+}
+.btn-primary {
+    background-color: #a8997d;
+}
+.btn-primary:hover {
+    background-color: #736753;
+}
+.btn-primary:focus {
+    background-color: #a8997d;
 }
 .btn-secondary {
     background-color: #6D87AD;

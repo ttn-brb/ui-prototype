@@ -80,6 +80,22 @@ export async function readWindowAggregatedSamples(
     return await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
 }
 
+export async function readSamples(
+    sensorId: string, seriesId: string,
+    rangeStart: Dayjs, rangeStop: Dayjs
+) : Promise<InfluxSample[]> {
+
+    const fluxQuery = `from(bucket: "${bucket}")
+    |> range(start: ${rangeStart.unix()}, stop: ${rangeStop.unix()})
+    |> filter(fn: (r) => r["sensor"] == "${sensorId}")
+    |> filter(fn: (r) => r["series"] == "${seriesId}")
+    |> filter(fn: (r) => r["_measurement"] == "sensor_value")
+    |> filter(fn: (r) => r["_field"] == "value")
+    |> yield()`
+
+    return await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
+}
+
 export async function readLastSample(
     sensorId: string, seriesId: string,
     rangeStart: Dayjs

@@ -3,7 +3,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import { log } from './logging'
 import { Sensor, SensorData, SensorDataMap } from './model'
 import { getState, updateSensorData } from './state'
-import { readLastSample, readWindowAggregatedSamples } from './influx'
+import { readLastSample, readSamples, readWindowAggregatedSamples } from './influx'
 
 let rangeSize = 7 * 24 * 60 * 60
 let window = 60 * 60
@@ -13,9 +13,9 @@ function readSamplesForNow() {
     const start = now.subtract(rangeSize, 'seconds')
     const stop = now
     log.verbose(`Reading samples between ${start.toISOString()} and ${stop.toISOString()}`)
-    readSamplesAsync(start, stop, window).then(
-        updateSensorData,
-        error => {
+    readSamplesAsync(start, stop, window)
+        .then(updateSensorData)
+        .catch(error => {
             log.error("Failed to read samples from influx: " + error)
         })
 }
@@ -37,7 +37,7 @@ async function inParallel<T, R>(fn: (item: T) => Promise<R>, items: T[]): Promis
     return results
 }
 
-async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSeconds: number) {
+async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSeconds: number | null) {
     const requestTimes: number[] = []
     const sensorDataMap : SensorDataMap = {}
 
@@ -49,7 +49,9 @@ async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSec
 
         async function loadSeriesData(seriesId: string) {
             const t0 = dayjs()
-            const samples = await readWindowAggregatedSamples(sensor.id, seriesId, rangeStart, rangeStop, windowInSeconds)
+            const samples = windowInSeconds === null
+                ? await readSamples(sensor.id, seriesId, rangeStart, rangeStop)
+                : await readWindowAggregatedSamples(sensor.id, seriesId, rangeStart, rangeStop, windowInSeconds)
             const lastSample = await readLastSample(sensor.id, seriesId, rangeStart)
             const td = dayjs().diff(t0, 'milliseconds')
             requestTimes.push(td)

@@ -38,22 +38,58 @@
     </div>
     <div id="sensor-details" class="main-area">
         <div class="container">
-            <h2>Werteverlauf</h2>
+            <h1><%= sensor.name %></h1>
             <div class="form-inline">
                 <label for="series-selection" class="mb-2 mr-sm-2">Kanal</label>
                 <select id="series-selection" class="form-control mb-2 mr-sm-4"
                     onchange="onSeriesSelectionChanged(this)">
                     <option value="" selected>kein Kanal ausgewählt</option>
                 </select>
-                <label for="plot-start" class="mb-2 mr-sm-2">von</label>
-                <input id="plot-start" type="datetime-local" class="form-control mb-2 mr-sm-2"
-                    placeholder="Anfang" />
-
-                <label for="plot-end" class="mb-2 mr-sm-2">bis</label>
-                <input id="plot-end" type="datetime-local" class="form-control mb-2 mr-sm-2"
-                    placeholder="Ende" />
             </div>
-            <div id="sensor-plot" class="mt-4 mb-4"></div>
+            <div id="series-details" style="display: none">
+                <h2 id="series-name"></h2>
+                <p id="series-description"></p>
+                <ul>
+                    <li>Einheit: <span id="series-unit"></span></li>
+                    <li>Gerät: <span id="series-device"></span></li>
+                </ul>
+                <h2>Werteverlauf</h2>
+                <div class="form-inline mt-3 mb-2">
+                    <label for="plot-start" class="mb-2 mr-sm-2">von</label>
+                    <input id="plot-start" type="datetime-local" class="form-control mb-2 mr-sm-2"
+                        placeholder="Anfang" />
+
+                    <label for="plot-end" class="mb-2 mr-sm-2">bis</label>
+                    <input id="plot-end" type="datetime-local" class="form-control mb-2 mr-sm-4"
+                        placeholder="Ende" />
+                </div>
+                <div class="form-inline mb-2">
+                    <input id="raw-data" type="checkbox" class="form-control mb-2 mr-sm-2" />
+                    <label for="raw-data" class="mb-2 mr-sm-4">Rohdaten</label>
+                    <label for="window" class="mb-2 mr-sm-2">Fenster</label>
+                    <select id="window" class="form-control mb-2 mr-sm-4">
+                        <option value="1">1 Minute</option>
+                        <option value="15">15 Minuten</option>
+                        <option value="60">1 Stunde</option>
+                        <option value="120">2 Stunden</option>
+                        <option value="360">6 Stunden</option>
+                        <option value="1440" selected>1 Tag</option>
+                        <option value="10080">1 Woche</option>
+                        <option value="43200">30 Tage</option>
+                        <option value="525600">1 Jahr</option>
+                    </select>
+                    <button id="refresh-plot" type="button" class="btn btn-primary mb-2"
+                        onclick="loadSeries()">Aktualisieren</button>
+                </div>
+                <div class="form-inline">
+                    <button id="set-plot-range-1-hour" class="btn btn-secondary mb-2 mr-1">1 Stunde</button>
+                    <button id="set-plot-range-1-day" class="btn btn-secondary mb-2 mr-1">1 Tag</button>
+                    <button id="set-plot-range-1-week" class="btn btn-secondary mb-2 mr-1">1 Woche</button>
+                    <button id="set-plot-range-1-month" class="btn btn-secondary mb-2 mr-1">1 Monat</button>
+                    <button id="set-plot-range-1-year" class="btn btn-secondary mb-2 mr-1">1 Jahr</button>
+                </div>
+                <div id="sensor-plot" class="mt-4 mb-4"></div>
+            </div>
             <h2>Datendownload</h2>
             <p>TODO: Formular für Zeitbereich und Fensterung des Download</p>
         </div>

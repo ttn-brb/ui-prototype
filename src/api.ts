@@ -3,9 +3,10 @@ import express from 'express'
 import asyncHandler  from 'express-async-handler'
 import dayjs from 'dayjs'
 import { log } from './logging'
+import { Series } from './model'
 import { getState } from './state'
 import { buildSensorInfo } from './data'
-import { writeSamples } from './influx'
+import { writeSamples, readSamples, readWindowAggregatedSamples } from './influx'
 import { findTtnRxMetadata, getTtnMessageTimestamp } from './ttn'
 
 function parseToken(auth: string | null | undefined) {
@@ -43,6 +44,60 @@ export function setupApi() {
             res.status(404).end()
         } else {
             res.send({...sensorInfo, ...sensorData})
+        }
+    })
+
+    app.get('/sensors/:sensorId/series/:seriesId/data', (req, res) => {
+        const state = getState()
+        const sensorId = req.params.sensorId
+        const sensor = state.sensors[sensorId]
+        if (!sensor) {
+            res.status(404).end()
+            return
+        }
+        const seriesId = req.params.seriesId
+        const series = sensor.series[seriesId]
+        if (!series) {
+            res.status(404).end()
+            return
+        }
+
+        const startStr = req.query.start
+        const endStr = req.query.end
+        const start = startStr ? dayjs('' + startStr) : dayjs('2000-01-01T00:00:00Z')
+        const end = startStr ? dayjs('' + endStr) : dayjs('2999-12-31T23:59:59Z')
+        const rawData = req.query.raw === '1'
+        const winStr = req.query.window
+        const win = winStr ? _.toNumber(winStr) : 60
+
+        if (rawData) {
+            readSamples(sensorId, seriesId, start, end)
+                .then(samples => {
+                    res.json(<Series>{
+                        id: req.params.seriesId,
+                        type: series,
+                        samples,
+                        lastSample: undefined,
+                    })
+                })
+                .catch(error => {
+                    log.error(error.message)
+                    res.status(500).end()
+                })
+        } else {
+            readWindowAggregatedSamples(sensorId, seriesId, start, end, win * 60)
+                .then(samples => {
+                    res.json(<Series>{
+                        id: req.params.seriesId,
+                        type: series,
+                        samples,
+                        lastSample: undefined,
+                    })
+                })
+                .catch(error => {
+                    log.error(error.message)
+                    res.status(500).end()
+                })
         }
     })
 
