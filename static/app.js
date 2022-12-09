@@ -323,11 +323,11 @@ function updateSeriesPlot(ctx) {
 function updateApiUrls(ctx) {
     ctx = window.ctx;
     if (ctx.currentSeriesId) {
-        $('#api-url-series-json').text(apiUrlForSeriesJson(ctx));
+        $('#api-url-series-json').text(apiUrlForSeriesJson(ctx).href);
     } else {
         $('#api-url-series-json').html('<em>Kein Kanal ausgewählt</em>');
     }
-    $('#api-url-sensor-csv').text(apiUrlForSensorCsv(ctx));
+    $('#api-url-sensor-csv').text(apiUrlForSensorCsv(ctx).href);
 }
 
 function selectSeries(seriesId) {
@@ -342,7 +342,7 @@ function selectSeries(seriesId) {
         if (seriesId) {
             uri.hash = '#' + seriesId;
         } else {
-            uri.hash = '';
+            uri.hash = '#';
         }
         document.location.replace(uri);
         $('#series-selection').val(seriesId);
@@ -561,6 +561,7 @@ function loadSensor(ctx) {
         updateMarker(ctx);
         updateSeriesInfo(ctx);
         updateSeriesPlot(ctx);
+        updateApiUrls(ctx);
     });
 }
 
@@ -588,6 +589,7 @@ function apiUrlForSeriesJson(ctx) {
 
 function loadSeries(ctx) {
     ctx = ctx || window.ctx;
+    if (!ctx.currentSeriesId) return;
     $.get(apiUrlForSeriesJson(ctx), data => {
         ctx.series = data;
         updateSeriesPlot(ctx);
@@ -596,7 +598,7 @@ function loadSeries(ctx) {
 
 function apiUrlForSensorCsv(ctx) {
     ctx = ctx || window.ctx;
-    var sensorId = ctx.sensorId;
+    var sensorId = ctx.sensor.id;
     var urlBase = new URL(document.location.href).origin;
     var url = new URL(urlBase + '/api/v0/sensors/' + sensorId + '/data.csv');
     addSearchParamsForRange(url, 'dl');
