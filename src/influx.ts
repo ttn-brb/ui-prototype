@@ -11,7 +11,7 @@ const PRECISION = 'ms'
 
 const influx = new InfluxDB({ url, token })
 
-interface InfluxSample {
+export interface InfluxSample {
     ts: string,
     sensorId: string,
     seriesId: string,

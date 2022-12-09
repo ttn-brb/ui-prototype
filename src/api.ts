@@ -5,7 +5,8 @@ import dayjs from 'dayjs'
 import { log } from './logging'
 import { Series } from './model'
 import { getState } from './state'
-import { buildSensorInfo } from './data'
+import { InfluxSample } from './influx'
+import { buildSensorInfo, csvFromSamples, CsvFormat } from './data'
 import { writeSamples, readSamples, readWindowAggregatedSamples } from './influx'
 import { findTtnRxMetadata, getTtnMessageTimestamp } from './ttn'
 
@@ -47,6 +48,50 @@ export function setupApi() {
         }
     })
 
+    function extractRangeAndWindow(req: any) {
+        const startStr = req.query.start
+        const endStr = req.query.end
+        const start = startStr ? dayjs('' + startStr) : dayjs('2000-01-01T00:00:00Z')
+        const end = startStr ? dayjs('' + endStr) : dayjs('2999-12-31T23:59:59Z')
+        const rawData = req.query.raw === '1'
+        const winStr = req.query.window
+        const win = winStr ? _.toNumber(winStr) : 60
+        return { start, end, rawData, win }
+    }
+
+    app.get('/sensors/:sensorId/data.csv', (req, res) => {
+        log.warn('OK')
+        const state = getState()
+        const sensorId = req.params.sensorId
+        const sensor = state.sensors[sensorId]
+        if (!sensor) {
+            res.status(404).end()
+            return
+        }
+
+        let csvFormat = CsvFormat.Standard
+        if (req.query.format === 'ExcelGerman') csvFormat = CsvFormat.ExcelGerman
+
+        function handleDataPromise(p: Promise<InfluxSample[]>) { p
+            .then(samples => {
+                res.setHeader('Content-Disposition', `filename="${sensor.id}.csv"`)
+                res.setHeader('Content-Type', 'application/octet-stream')
+                res.send(csvFromSamples(sensor, samples, csvFormat))
+            })
+            .catch(error => {
+                log.error(error.message)
+                res.status(500).end()
+            })
+        }
+
+        const { start, end, rawData, win } = extractRangeAndWindow(req)
+
+        handleDataPromise(rawData
+            ? readSamples(sensorId, null, start, end)
+            : readWindowAggregatedSamples(sensorId, null, start, end, win * 60))
+
+    })
+
     app.get('/sensors/:sensorId/series/:seriesId/data', (req, res) => {
         const state = getState()
         const sensorId = req.params.sensorId
@@ -62,43 +107,26 @@ export function setupApi() {
             return
         }
 
-        const startStr = req.query.start
-        const endStr = req.query.end
-        const start = startStr ? dayjs('' + startStr) : dayjs('2000-01-01T00:00:00Z')
-        const end = startStr ? dayjs('' + endStr) : dayjs('2999-12-31T23:59:59Z')
-        const rawData = req.query.raw === '1'
-        const winStr = req.query.window
-        const win = winStr ? _.toNumber(winStr) : 60
+        const { start, end, rawData, win } = extractRangeAndWindow(req)
 
-        if (rawData) {
-            readSamples(sensorId, seriesId, start, end)
-                .then(samples => {
-                    res.json(<Series>{
-                        id: req.params.seriesId,
-                        type: series,
-                        samples,
-                        lastSample: undefined,
-                    })
+        function handleDataPromise(p: Promise<InfluxSample[]>) { p
+            .then(samples => {
+                res.json(<Series>{
+                    id: req.params.seriesId,
+                    type: series,
+                    samples,
+                    lastSample: undefined,
                 })
-                .catch(error => {
-                    log.error(error.message)
-                    res.status(500).end()
-                })
-        } else {
-            readWindowAggregatedSamples(sensorId, seriesId, start, end, win * 60)
-                .then(samples => {
-                    res.json(<Series>{
-                        id: req.params.seriesId,
-                        type: series,
-                        samples,
-                        lastSample: undefined,
-                    })
-                })
-                .catch(error => {
-                    log.error(error.message)
-                    res.status(500).end()
-                })
+            })
+            .catch(error => {
+                log.error(error.message)
+                res.status(500).end()
+            })
         }
+
+        handleDataPromise(rawData
+            ? readSamples(sensorId, seriesId, start, end)
+            : readWindowAggregatedSamples(sensorId, seriesId, start, end, win * 60))
     })
 
     app.post('/sensors/:sensorId/series/:seriesId/sample', jsonParser, asyncHandler(async (req, res) => {

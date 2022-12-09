@@ -298,19 +298,28 @@ function updateSeriesPlot(ctx) {
             return;
         }
     }
-    // var series = _.get(sensor, ['data', seriesId]);
     var series = ctx.series;
     if (series) {
         var spec = createSeriesVegaLiteSpec(series);
         spec.height = 220;
-        vegaEmbed('#sensor-plot', spec,
+        vegaEmbed('#series-plot', spec,
             {
                 mode: 'vega-lite',
                 actions: false,
             });
     } else {
-        $('#sensor-plot').html('<em>Kein Kanal ausgewählt</em>');
+        $('#series-plot').html('<em>Kein Kanal ausgewählt</em>');
     }
+}
+
+function updateApiUrls(ctx) {
+    ctx = window.ctx;
+    if (ctx.currentSeriesId) {
+        $('#api-url-series-json').text(apiUrlForSeriesJson(ctx));
+    } else {
+        $('#api-url-series-json').html('<em>Kein Kanal ausgewählt</em>');
+    }
+    $('#api-url-sensor-csv').text(apiUrlForSensorCsv(ctx));
 }
 
 function selectSeries(seriesId) {
@@ -330,6 +339,7 @@ function selectSeries(seriesId) {
         document.location.replace(uri);
         $('#series-selection').val(seriesId);
         updateSeriesInfo(ctx);
+        updateApiUrls(ctx);
         loadSeries(ctx);
     }
 }
@@ -384,8 +394,9 @@ function updateSeriesInfo(ctx) {
     var series = sensor.series[ctx.currentSeriesId];
     $('#series-name').text(series.label);
     $('#series-description').text(series.description);
-    $('#series-device').text(series.device);
+    $('#series-id').text(ctx.currentSeriesId);
     $('#series-unit').text(series.unit);
+    $('#series-device').text(series.device);
     $('#series-details').show();
 }
 
@@ -513,10 +524,6 @@ function updateSensorView(ctx) {
             $ss.append(currentMeasurementHtml(sensor, s));
         }
     }
-
-    // update sensor detail info
-    // update series detail info
-    // update series chart
 }
 
 function onSeriesSelectionChanged(e) {
@@ -549,24 +556,64 @@ function loadSensor(ctx) {
     });
 }
 
-function loadSeries(ctx) {
+function addSearchParamsForRange(url, controlPrefix) {
+    var rangeStart = document.getElementById(controlPrefix + '-start').value;
+    var rangeEnd = document.getElementById(controlPrefix + '-end').value;
+    var rawData = document.getElementById(controlPrefix + '-raw-data').checked;
+    var win = document.getElementById(controlPrefix + '-window').value;
+    if (rangeStart) url.searchParams.set('start', dayjs(rangeStart).toISOString().substring(0, 16) + 'Z');
+    if (rangeEnd) url.searchParams.set('end', dayjs(rangeEnd).toISOString().substring(0, 16) + 'Z');
+    if (rawData) url.searchParams.set('raw', '1');
+    if (!rawData) url.searchParams.set('window', win);
+}
+
+function apiUrlForSeriesJson(ctx) {
     ctx = ctx || window.ctx;
     var sensorId = ctx.sensorId;
     var seriesId = ctx.currentSeriesId;
     if (!seriesId) return;
-    var rangeStart = document.getElementById('plot-start').value;
-    var rangeEnd = document.getElementById('plot-end').value;
-    var rawData = document.getElementById('raw-data').checked;
-    var win = document.getElementById('window').value;
     var urlBase = new URL(document.location.href).origin;
     var url = new URL(urlBase + '/api/v0/sensors/' + sensorId + '/series/' + seriesId + '/data');
-    if (rangeStart) url.searchParams.set('start', dayjs(rangeStart).toISOString());
-    if (rangeEnd) url.searchParams.set('end', dayjs(rangeEnd).toISOString());
-    if (rawData) url.searchParams.set('raw', '1');
-    if (!rawData) url.searchParams.set('window', win);
-    $.get(url.href, data => {
+    addSearchParamsForRange(url, 'plot');
+    return url;
+}
+
+function loadSeries(ctx) {
+    ctx = ctx || window.ctx;
+    $.get(apiUrlForSeriesJson(ctx), data => {
         ctx.series = data;
         updateSeriesPlot(ctx);
+    });
+}
+
+function apiUrlForSensorCsv(ctx) {
+    ctx = ctx || window.ctx;
+    var sensorId = ctx.sensorId;
+    var urlBase = new URL(document.location.href).origin;
+    var url = new URL(urlBase + '/api/v0/sensors/' + sensorId + '/data.csv');
+    addSearchParamsForRange(url, 'dl');
+    return url;
+}
+
+function downloadSensorCsv({ format=null } = {}) {
+    var ctx = window.ctx;
+    var url = apiUrlForSensorCsv(ctx);
+    if (format) url.searchParams.set('format', format);
+
+    fetch(url).then(response => {
+        var contentDisposition = response.headers.get('Content-Disposition') || '';
+        var filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        var filename = filenameMatch ?
+            _.trim(filenameMatch[1], `'"`) :
+            'file';
+        var a = document.createElement('a');
+        a.download = filename;
+        response.blob().then(data => {
+            a.href = window.URL.createObjectURL(data);
+            a.dataset.downloadurl = ['text/csv', a.download, a.href].join(':');
+            var e = new MouseEvent('click', { bubbles: true });
+            a.dispatchEvent(e);
+        });
     });
 }
 
@@ -598,31 +645,66 @@ function initializeDateRangePicker(start, end) {
     end.value = dayjs().toISOString().substring(0, 16);
 }
 
-function initializePlotRangeControls() {
-    var plotStart = document.getElementById('plot-start');
-    var plotEnd = document.getElementById('plot-end');
-    initializeDateRangePicker(plotStart, plotEnd);
+function registerApiUrlRelevantControls(prefix) {
+    var handler = function () {
+        updateApiUrls();
+    };
+    $('#' + prefix + '-start').on('change', handler);
+    $('#' + prefix + '-end').on('change', handler);
+    $('#' + prefix + '-raw-data').on('change', handler);
+    $('#' + prefix + '-window').on('change', handler);
 }
 
 function initializePlotForm() {
-    initializePlotRangeControls();
-    $('#raw-data').on('change', e => {
-        $('#window').attr('disabled', e.target.checked);
+    initializeDateRangePicker(
+        document.getElementById('plot-start'),
+        document.getElementById('plot-end'));
+    $('#plot-raw-data').on('change', e => {
+        $('#plot-window').attr('disabled', e.target.checked);
     })
+
     function setPlotRange(unit, window) {
         document.getElementById('plot-start').value =
             dayjs().subtract(1, unit).toISOString().substring(0, 16);
         document.getElementById('plot-end').value =
             dayjs().toISOString().substring(0, 16);
-        document.getElementById('raw-data').checked = false;
-        document.getElementById('window').value = '' + window;
+        document.getElementById('plot-raw-data').checked = false;
+        document.getElementById('plot-window').value = '' + window;
+        updateApiUrls();
         loadSeries();
     }
-    $('#set-plot-range-1-hour').on('click', e => setPlotRange('hour', 1))
-    $('#set-plot-range-1-day').on('click', e => setPlotRange('day', 15))
-    $('#set-plot-range-1-week').on('click', e => setPlotRange('week', 360))
-    $('#set-plot-range-1-month').on('click', e => setPlotRange('month', 1440))
-    $('#set-plot-range-1-year').on('click', e => setPlotRange('year', 10080))
+    $('#set-plot-range-1-hour').on('click', e => setPlotRange('hour', 1));
+    $('#set-plot-range-1-day').on('click', e => setPlotRange('day', 15));
+    $('#set-plot-range-1-week').on('click', e => setPlotRange('week', 360));
+    $('#set-plot-range-1-month').on('click', e => setPlotRange('month', 1440));
+    $('#set-plot-range-1-year').on('click', e => setPlotRange('year', 10080));
+
+    registerApiUrlRelevantControls('plot');
+}
+
+function initializeDownloadForm() {
+    initializeDateRangePicker(
+        document.getElementById('dl-start'),
+        document.getElementById('dl-end'));
+    $('#dl-raw-data').on('change', e => {
+        $('#dl-window').attr('disabled', e.target.checked);
+    })
+    function setPlotRange(unit, window) {
+        document.getElementById('dl-start').value =
+            dayjs().subtract(1, unit).toISOString().substring(0, 16);
+        document.getElementById('dl-end').value =
+            dayjs().toISOString().substring(0, 16);
+        document.getElementById('dl-raw-data').checked = false;
+        document.getElementById('dl-window').value = '' + window;
+        updateApiUrls();
+    }
+    $('#set-dl-range-1-hour').on('click', e => setPlotRange('hour', 1));
+    $('#set-dl-range-1-day').on('click', e => setPlotRange('day', 15));
+    $('#set-dl-range-1-week').on('click', e => setPlotRange('week', 360));
+    $('#set-dl-range-1-month').on('click', e => setPlotRange('month', 1440));
+    $('#set-dl-range-1-year').on('click', e => setPlotRange('year', 10080));
+
+    registerApiUrlRelevantControls('dl');
 }
 
 function initConfiguration() {
@@ -666,6 +748,7 @@ function initializeSensorView(sensorId) {
         window.ctx = ctx;
 
         initializePlotForm();
+        initializeDownloadForm();
         setupMap(ctx);
         loadSensor(ctx);
     });
