@@ -58,7 +58,8 @@ footer {
 }
 #menu {
     flex-basis: auto;
-    height: 2rem;
+    height: 32px;
+    min-height: 32px;
     background-color: var(--primary-color);
     color: white;
     display: flex;
@@ -81,8 +82,9 @@ footer {
 }
 #menu select.form-control {
     padding: 0 1rem;
-    min-width: 188px;
-    height: 100%;
+    margin-right: 3px;
+    min-width: 184px;
+    height: 26px;
 }
 #page {
     flex-grow: 1;
@@ -222,9 +224,9 @@ td.sensor-description {
         font-size: 1.125rem;
     }
     #menu {
-        min-height: 3rem;
+        min-height: 48px;
     }
-    #menu select {
+    #menu select.form-control {
         margin-right: 1rem;
     }
     #page {
@@ -245,6 +247,17 @@ td.sensor-description {
     }
     .side-block h3 {
         text-align: left;
+    }
+}
+@media screen and (max-width: 480px) {
+    #menu {
+        min-height: inherit;
+        height: auto;
+        flex-wrap: wrap;
+        padding-top: 11px;
+        padding-bottom: 11px;
+        gap: 8px;
+        justify-content: center;
     }
 }
 
