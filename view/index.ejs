@@ -1,7 +1,10 @@
 <%- include('parts/header', { bootScript: "initializeMapView()" }) %>
 <nav id="menu">
     <div class="menu-section left">
-        <a href="/sensors">Liste der Sensoren</a>
+        <a href="/sensors">
+            <i class="fa fa-bars mr-1"></i>
+            Liste der Sensoren
+        </a>
     </div>
     <div class="menu-section right">
         <select id="map-style" class="form-control">
@@ -32,19 +35,25 @@
                 <h4 class="sensor-name"></h4>
                 <p class="sensor-description"></p>
                 <button id="goto-details-button" class="btn btn-primary"
-                    onclick="gotoDetailView()">Details</button>
-                <h5>Position</h5>
+                    onclick="gotoDetailView()">
+                    <i class="fa fa-search mr-sm-1"></i>
+                    Details
+                </button>
+                <h5><i class="fa fa-map-marker-alt"></i>Position</h5>
                 <div class="sensor-location"></div>
-                <h5>Letzte Aktivität</h5>
+                <h5><i class="fa fa-broadcast-tower"></i>Letzte Aktivität</h5>
                 <div class="sensor-last-activity"></div>
-                <h5>Aktuelle Werte</h5>
+                <h5><i class="fa fa-chart-bar"></i>Aktuelle Werte</h5>
                 <div class="sensor-series"></div>
-                <h5>Wochenverlauf</h5>
+                <h5><i class="fa fa-chart-line"></i>Wochenverlauf</h5>
                 <div class="sensor-plot"></div>
             </div>
             <div id="show-all-sensors-block">
                 <button class="btn btn-primary" style="width:100%;"
-                    onclick="selectSeries(null)">Alle Sensoren anzeigen</button>
+                    onclick="selectSeries(null)">
+                    <i class="far fa-map mr-sm-1"></i>
+                    Alle Sensoren anzeigen
+                </button>
             </div>
         </div>
     </div>

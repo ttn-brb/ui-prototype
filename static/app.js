@@ -195,7 +195,7 @@ function updateSeriesMiniPlot(ctx) {
     } else {
         $('#show-all-sensors-block').hide();
         $('.measurement').removeClass('selected-measurement');
-        $('#sensor-details .sensor-plot').html('<em>Kein Messwert ausgewählt</em>');
+        $('#sensor-details .sensor-plot').html('Kein Messwert ausgewählt.<br/>Klicke auf einen der aktuellen Werte.');
     }
 }
 
@@ -305,7 +305,15 @@ function updateSeriesPlot(ctx) {
         vegaEmbed('#series-plot', spec,
             {
                 mode: 'vega-lite',
-                actions: false,
+                actions: {
+                    source: false,
+                    compiled: false,
+                    editor: false,
+                },
+                i18n: {
+                    SVG_ACTION: 'Als SVG speichern',
+                    PNG_ACTION: 'Als PNG speichern',
+                },
             });
     } else {
         $('#series-plot').html('<em>Kein Kanal ausgewählt</em>');

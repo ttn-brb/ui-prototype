@@ -147,6 +147,11 @@ tr.clickable.hover {
     font-size: 1rem;
     background: var(--tertiary-color);
 }
+.side-block h4 i.fa,
+.side-block h5 i.fa {
+    float: right;
+    padding-top: 2px;
+}
 .sensor-description {
     font-size: 0.85rem;
     opacity: 0.8;
@@ -204,6 +209,21 @@ td.sensor-description {
 }
 #series-plot {
     width: calc(100% - 1rem);
+}
+
+.api-url {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 1.5rem;
+}
+.api-url .fa {
+    font-size: 200%;
+    color: #6D87AD;
+}
+.api-url code {
+    word-break: break-all;
 }
 
 @media screen and (max-height: 800px) and (min-width: 641px) {

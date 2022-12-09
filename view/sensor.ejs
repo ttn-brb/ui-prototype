@@ -1,8 +1,14 @@
 <%- include('parts/header', { bootScript: `initializeSensorView("${sensor.id}")` }) %>
 <nav id="menu">
     <div class="menu-section left">
-        <a href="/">Zurück zur Karte</a>
-        <a href="/sensors">Sensorliste</a>
+        <a href="/">
+            <i class="far fa-map mr-1"></i>
+            Zurück zur Karte
+        </a>
+        <a href="/sensors">
+            <i class="fa fa-bars mr-1"></i>
+            Sensorliste
+        </a>
     </div>
     <div class="menu-section right">
         <select id="map-style" class="form-control">
@@ -22,9 +28,9 @@
                 <h3>Sensor</h3>
                 <h4><%= sensor.name %></h4>
                 <p class="sensor-description"><%= sensor.description %></p>
-                <h5>Letzte Aktivität</h5>
+                <h5><i class="fa fa-broadcast-tower"></i>Letzte Aktivität</h5>
                 <div class="sensor-last-activity">&nbsp;</div>
-                <h5>Aktuelle Werte</h5>
+                <h5><i class="fa fa-chart-bar"></i>Aktuelle Werte</h5>
                 <div class="sensor-series"></div>
             </div>
         </div>
@@ -92,11 +98,17 @@
                         <option value="525600">1 Jahr</option>
                     </select>
                     <button id="refresh-plot" type="button" class="btn btn-primary mb-2"
-                        onclick="loadSeries()">Aktualisieren</button>
+                        onclick="loadSeries()">
+                        <i class="fa fa-sync mr-1"></i>
+                        Aktualisieren
+                    </button>
                 </div>
                 <div id="series-plot" class="mt-4 mb-4"></div>
                 <p>URL zum Abruf der dargestellten Daten:</p>
-                <p><code id="api-url-series-json"></code></p>
+                <p class="api-url">
+                    <i class="fa fa-paperclip"></i>
+                    <code id="api-url-series-json"></code>
+                </p>
             </div>
 
             <h2>Datendownload</h2>
@@ -137,12 +149,21 @@
             </div>
             <div class="form-inline">
                 <button id="download-standard" type="button" class="btn btn-primary mb-2 mr-1"
-                    onclick="downloadSensorCsv()">Download CSV (Standard)</button>
+                    onclick="downloadSensorCsv()">
+                    <i class="fa fa-file-csv mr-1"></i>
+                    Download CSV (Standard)
+                </button>
                 <button id="download-excel-german" type="button" class="btn btn-primary mb-2"
-                    onclick="downloadSensorCsv({format:'ExcelGerman'})">Download CSV (Excel, Deutsch)</button>
+                    onclick="downloadSensorCsv({format:'ExcelGerman'})">
+                    <i class="fa fa-file-excel mr-1"></i>
+                    Download CSV (Excel, Deutsch)
+                </button>
             </div>
             <p>URL zum Abruf der CSV-Datei:</p>
-            <p><code id="api-url-sensor-csv"></code></p>
+            <p class="api-url">
+                <i class="fa fa-paperclip"></i>
+                <code id="api-url-sensor-csv"></code>
+            </p>
             <p>
                 <strong>Hinweis:</strong>
                 An die URL kann ein <code>&format=ExcelGerman</code> angehängt werden,
