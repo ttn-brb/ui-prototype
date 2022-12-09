@@ -50,65 +50,76 @@ function readAsync<T>(query: string, rowHandler: (row: string[], tableMeta: Flux
     })
 }
 
-function buildSampleParser(sensorId: string, seriesId: string) {
+function buildSampleParser(sensorId: string | null, seriesId: string | null) {
     return (row: string[], tableMeta: FluxTableMetaData) => {
         const o = tableMeta.toObject(row)
         return {
             ts: dayjs(o._time).toISOString(),
-            sensorId,
-            seriesId,
+            sensorId: sensorId ?? o.sensor,
+            seriesId: seriesId ?? o.series,
             value: Number.parseFloat(o._value),
         }
     }
 }
 
+function fluxQueryForValuesInRange(
+    sensorId: string | null, seriesId: string | null,
+    rangeStart: Dayjs | null, rangeStop: Dayjs | null
+): string {
+    let range = rangeStart
+        ? rangeStop
+            ? `|> range(start: ${rangeStart.unix()}, stop: ${rangeStop.unix()}) `
+            : `|> range(start: ${rangeStart.unix()}) `
+        : rangeStop
+            ? `|> range(stop: ${rangeStop.unix()}) `
+            : ``
+    let fluxQuery =
+        `from(bucket: "${bucket}") ` +
+        range
+    if (sensorId) fluxQuery +=
+        `|> filter(fn: (r) => r["sensor"] == "${sensorId}") `
+    if (seriesId) fluxQuery +=
+        `|> filter(fn: (r) => r["series"] == "${seriesId}") `
+    fluxQuery +=
+        `|> filter(fn: (r) => r["_measurement"] == "sensor_value") ` +
+        `|> filter(fn: (r) => r["_field"] == "value") `
+    return fluxQuery
+}
+
 export async function readWindowAggregatedSamples(
-    sensorId: string, seriesId: string,
-    rangeStart: Dayjs, rangeStop: Dayjs,
+    sensorId: string | null, seriesId: string | null,
+    rangeStart: Dayjs | null, rangeStop: Dayjs | null,
     windowInSeconds: number
 ) : Promise<InfluxSample[]> {
 
-    const fluxQuery = `from(bucket: "${bucket}")
-    |> range(start: ${rangeStart.unix()}, stop: ${rangeStop.unix()})
-    |> filter(fn: (r) => r["sensor"] == "${sensorId}")
-    |> filter(fn: (r) => r["series"] == "${seriesId}")
-    |> filter(fn: (r) => r["_measurement"] == "sensor_value")
-    |> filter(fn: (r) => r["_field"] == "value")
-    |> aggregateWindow(every: ${windowInSeconds}s, fn: mean, createEmpty: true)
-    |> yield(name: "mean")`
+    let fluxQuery = fluxQueryForValuesInRange(sensorId, seriesId, rangeStart, rangeStop)
+    fluxQuery +=
+        `|> aggregateWindow(every: ${windowInSeconds}s, fn: mean, createEmpty: true) ` +
+        '|> yield(name: "mean")'
 
     return await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
 }
 
 export async function readSamples(
-    sensorId: string, seriesId: string,
-    rangeStart: Dayjs, rangeStop: Dayjs
+    sensorId: string | null, seriesId: string | null,
+    rangeStart: Dayjs | null, rangeStop: Dayjs | null
 ) : Promise<InfluxSample[]> {
 
-    const fluxQuery = `from(bucket: "${bucket}")
-    |> range(start: ${rangeStart.unix()}, stop: ${rangeStop.unix()})
-    |> filter(fn: (r) => r["sensor"] == "${sensorId}")
-    |> filter(fn: (r) => r["series"] == "${seriesId}")
-    |> filter(fn: (r) => r["_measurement"] == "sensor_value")
-    |> filter(fn: (r) => r["_field"] == "value")
-    |> yield()`
+    let fluxQuery = fluxQueryForValuesInRange(sensorId, seriesId, rangeStart, rangeStop)
+    fluxQuery +=
+        '|> yield()'
 
     return await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
 }
 
-export async function readLastSample(
-    sensorId: string, seriesId: string,
-    rangeStart: Dayjs
-) : Promise<InfluxSample | null> {
+export async function readLastSamples(
+    sensorId: string | null, seriesId: string | null,
+    rangeStart: Dayjs | null
+) : Promise<InfluxSample[]> {
 
-    const fluxQuery = `from(bucket: "${bucket}")
-    |> range(start: ${rangeStart.unix()})
-    |> filter(fn: (r) => r["sensor"] == "${sensorId}")
-    |> filter(fn: (r) => r["series"] == "${seriesId}")
-    |> filter(fn: (r) => r["_measurement"] == "sensor_value")
-    |> filter(fn: (r) => r["_field"] == "value")
-    |> last()`
+    let fluxQuery = fluxQueryForValuesInRange(sensorId, seriesId, rangeStart, null)
+    fluxQuery +=
+        '|> last()'
 
-    const rows = await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
-    return rows.length > 0 ? rows[0] : null
+    return await readAsync(fluxQuery, buildSampleParser(sensorId, seriesId))
 }

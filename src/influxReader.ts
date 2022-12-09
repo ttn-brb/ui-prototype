@@ -1,9 +1,9 @@
 import _ from 'lodash'
 import dayjs, { Dayjs } from 'dayjs'
 import { log } from './logging'
-import { Sensor, SensorData, SensorDataMap } from './model'
+import { SensorData, SensorDataMap } from './model'
 import { getState, updateSensorData } from './state'
-import { readLastSample, readSamples, readWindowAggregatedSamples } from './influx'
+import { readLastSamples, readSamples, readWindowAggregatedSamples } from './influx'
 
 let rangeSize = 7 * 24 * 60 * 60
 let window = 60 * 60
@@ -20,65 +20,52 @@ function readSamplesForNow() {
         })
 }
 
-async function inSeries<T, R>(fn: (item: T) => Promise<R>, items: T[]): Promise<R[]> {
-    const results = []
-    for (const item of items) {
-        results.push(await fn(item))
-    }
-    return results
-}
-
-async function inParallel<T, R>(fn: (item: T) => Promise<R>, items: T[]): Promise<R[]> {
-    const results = []
-    const tasks = items.map(fn)
-    for (const task of tasks) {
-        results.push(await task)
-    }
-    return results
-}
-
 async function readSamplesAsync(rangeStart: Dayjs, rangeStop: Dayjs, windowInSeconds: number | null) {
-    const requestTimes: number[] = []
     const sensorDataMap : SensorDataMap = {}
+    const state = getState()
+    const t0 = dayjs()
+    const samples = windowInSeconds
+        ? await readWindowAggregatedSamples(null, null, rangeStart, rangeStop, windowInSeconds)
+        : await readSamples(null, null, rangeStart, rangeStop)
+    const tWindows = dayjs()
+    const lastSamples = await readLastSamples(null, null, rangeStart)
+    const tLastSamples = dayjs()
 
-    async function loadSensorData(sensor: Sensor) {
+    log.verbose(
+        `Finished reading samples. ` +
+        `Windowed samples: ${_.round(tWindows.diff(t0, 'ms') / 1000, 1)} s, ` +
+        `Last samples: ${_.round(tLastSamples.diff(tWindows, 'ms') / 1000, 1)} s.`)
+
+    for (const sensor of _.values(state.sensors)) {
         const sensorData: SensorData = {
             track: null,
             data: {}
         }
-
-        async function loadSeriesData(seriesId: string) {
-            const t0 = dayjs()
-            const samples = windowInSeconds === null
-                ? await readSamples(sensor.id, seriesId, rangeStart, rangeStop)
-                : await readWindowAggregatedSamples(sensor.id, seriesId, rangeStart, rangeStop, windowInSeconds)
-            const lastSample = await readLastSample(sensor.id, seriesId, rangeStart)
-            const td = dayjs().diff(t0, 'milliseconds')
-            requestTimes.push(td)
+        for (const seriesId of _.keys(sensor.series)) {
             const sampleType = sensor.series[seriesId]
+            const lastSample = _.first(lastSamples
+                .filter(influxSample =>
+                    influxSample.sensorId === sensor.id &&
+                    influxSample.seriesId === seriesId))
             sensorData.data[seriesId] = {
                 id: seriesId,
                 type: sampleType,
-                samples: samples.map(influxSample => ({
-                    ts: influxSample.ts,
-                    value: influxSample.value,
-                })),
+                samples: samples
+                    .filter(influxSample =>
+                        influxSample.sensorId === sensor.id &&
+                        influxSample.seriesId === seriesId)
+                    .map(influxSample => ({
+                        ts: influxSample.ts,
+                        value: influxSample.value,
+                    })),
                 lastSample: lastSample ? {
                     ts: lastSample.ts,
                     value: lastSample.value,
                 } : undefined,
             }
         }
-
-        await inParallel(loadSeriesData, _.keys(sensor.series))
         sensorDataMap[sensor.id] = sensorData
     }
-
-    const state = getState()
-    const t0 = dayjs()
-    await inSeries(loadSensorData, _.values(state.sensors))
-    const tTotal = dayjs().diff(t0, 'milliseconds')
-    log.verbose(`Finished reading samples. ${_.size(requestTimes)} requests with ${_.round(_.mean(requestTimes))} ms average took ${_.round(tTotal / 1000, 1)} s.`)
     return sensorDataMap
 }
 
