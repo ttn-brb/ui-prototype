@@ -2,4 +2,5 @@
 /build
 /influxdb-data
 *.md
+*.ps1
 sensors.json

@@ -1,15 +1,15 @@
-FROM node:16 AS build
+FROM node:18-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --production=false
+RUN npm ci --production=false
 COPY src ./src
 COPY tsconfig.json ./
 RUN npm run build
 
-FROM node:16-alpine
+FROM node:18-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --production=true
+RUN npm ci --production=true
 COPY --from=build /app/build ./build
 COPY view ./view
 COPY static ./static
