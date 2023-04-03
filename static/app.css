@@ -180,12 +180,19 @@ tr.clickable.hover {
     font-size: 0.85rem;
     border: none;
 }
-#goto-details-button {
-    font-size: 0.85rem;
-    padding: 0.15rem 0.5rem 0.25rem;
+#goto-details-button,
+#goto-download-button {
     margin: 0.5rem -0.5rem;
     width: calc(100% + 1rem);
     border: none;
+}
+#goto-details-button {
+    font-size: 0.85rem;
+    padding: 0.15rem 0.5rem 0.25rem;
+}
+#goto-download-button {
+    font-size: 1.25rem;
+    padding: 0.3rem 1rem 0.5rem;
 }
 
 #sensor-list {
