@@ -1,3 +1,5 @@
+var TZ = 'Europe/Berlin';
+
 // set the local for Vega and VegaLite
 vega.defaultLocale(
     {
@@ -89,7 +91,21 @@ function formatTimestamp(ts, longFormat) {
     var format = longFormat ?
         'ddd DD.MM.YYYY [um] HH:mm:ss [Uhr]' :
         'DD.MM.YYYY HH:mm:ss';
-    return dayjs(ts).tz('Europe/Berlin').format(format)
+    return dayjs(ts).tz(TZ).format(format)
+}
+
+function nowInLocalTZ() {
+    return dayjs().tz(TZ)
+}
+function isoFormatWithoutTZ(t) {
+    return t.format("YYYY-MM-DD[T]HH:mm:ss")
+}
+function parseInLocalTZ(t) {
+    if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'UTC') {
+        return dayjs.tz(t, TZ)
+    } else {
+        return dayjs(t).tz(TZ)
+    }
 }
 
 function currentMeasurementHtml(sensor, series) {
@@ -570,8 +586,8 @@ function addSearchParamsForRange(url, controlPrefix) {
     var rangeEnd = document.getElementById(controlPrefix + '-end').value;
     var rawData = document.getElementById(controlPrefix + '-raw-data').checked;
     var win = document.getElementById(controlPrefix + '-window').value;
-    if (rangeStart) url.searchParams.set('start', dayjs(rangeStart).toISOString().substring(0, 16) + 'Z');
-    if (rangeEnd) url.searchParams.set('end', dayjs(rangeEnd).toISOString().substring(0, 16) + 'Z');
+    if (rangeStart) url.searchParams.set('start', parseInLocalTZ(rangeStart).toISOString().substring(0, 16) + 'Z');
+    if (rangeEnd) url.searchParams.set('end', parseInLocalTZ(rangeEnd).toISOString().substring(0, 16) + 'Z');
     if (rawData) url.searchParams.set('raw', '1');
     if (!rawData) url.searchParams.set('window', win);
 }
@@ -651,8 +667,8 @@ function initializeDateRangePicker(start, end) {
         }
     })
 
-    start.value = dayjs().subtract(30, 'days').toISOString().substring(0, 16);
-    end.value = dayjs().toISOString().substring(0, 16);
+    start.value = isoFormatWithoutTZ(nowInLocalTZ().subtract(30, 'days')).substring(0, 16);
+    end.value = isoFormatWithoutTZ(nowInLocalTZ()).substring(0, 16);
 }
 
 function registerApiUrlRelevantControls(prefix) {
@@ -675,9 +691,9 @@ function initializePlotForm() {
 
     function setPlotRange(unit, window) {
         document.getElementById('plot-start').value =
-            dayjs().subtract(1, unit).toISOString().substring(0, 16);
+            isoFormatWithoutTZ(nowInLocalTZ().subtract(1, unit)).substring(0, 16);
         document.getElementById('plot-end').value =
-            dayjs().toISOString().substring(0, 16);
+            isoFormatWithoutTZ(nowInLocalTZ()).substring(0, 16);
         document.getElementById('plot-raw-data').checked = false;
         document.getElementById('plot-window').value = '' + window;
         updateApiUrls();
@@ -701,9 +717,9 @@ function initializeDownloadForm() {
     })
     function setPlotRange(unit, window) {
         document.getElementById('dl-start').value =
-            dayjs().subtract(1, unit).toISOString().substring(0, 16);
+            isoFormatWithoutTZ(nowInLocalTZ().subtract(1, unit)).substring(0, 16);
         document.getElementById('dl-end').value =
-            dayjs().toISOString().substring(0, 16);
+            isoFormatWithoutTZ(nowInLocalTZ()).substring(0, 16);
         document.getElementById('dl-raw-data').checked = false;
         document.getElementById('dl-window').value = '' + window;
         updateApiUrls();
