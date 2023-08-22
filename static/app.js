@@ -675,9 +675,9 @@ function initializePlotForm() {
 
     function setPlotRange(unit, window) {
         document.getElementById('plot-start').value =
-            dayjs().subtract(1, unit).toISOString().substring(0, 16);
+            dayjs().add(dayjs().utcOffset(), 'm').subtract(1, unit).toISOString().substring(0, 16);
         document.getElementById('plot-end').value =
-            dayjs().toISOString().substring(0, 16);
+            dayjs().add(dayjs().utcOffset(), 'm').toISOString().substring(0, 16);
         document.getElementById('plot-raw-data').checked = false;
         document.getElementById('plot-window').value = '' + window;
         updateApiUrls();
@@ -701,9 +701,9 @@ function initializeDownloadForm() {
     })
     function setPlotRange(unit, window) {
         document.getElementById('dl-start').value =
-            dayjs().subtract(1, unit).toISOString().substring(0, 16);
+            dayjs().add(dayjs().utcOffset(), 'm').subtract(1, unit).toISOString().substring(0, 16);
         document.getElementById('dl-end').value =
-            dayjs().toISOString().substring(0, 16);
+            dayjs().add(dayjs().utcOffset(), 'm').toISOString().substring(0, 16);
         document.getElementById('dl-raw-data').checked = false;
         document.getElementById('dl-window').value = '' + window;
         updateApiUrls();
