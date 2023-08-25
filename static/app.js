@@ -603,11 +603,19 @@ function apiUrlForSeriesJson(ctx) {
     return url;
 }
 
+function normalizeSeries(series) {
+    console.log(series)
+    for (var s of series.samples) {
+        s.ts = isoFormatWithoutTZ(dayjs(s.ts, 'UTC').tz(TZ))
+    }
+    return series
+}
+
 function loadSeries(ctx) {
     ctx = ctx || window.ctx;
     if (!ctx.currentSeriesId) return;
     $.get(apiUrlForSeriesJson(ctx), data => {
-        ctx.series = data;
+        ctx.series = normalizeSeries(data);
         updateSeriesPlot(ctx);
     });
 }
