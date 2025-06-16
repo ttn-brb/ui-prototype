@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import express from 'express'
+import cors from 'cors'
 import asyncHandler  from 'express-async-handler'
 import dayjs from 'dayjs'
 import { log } from './logging'
@@ -17,9 +18,16 @@ function parseToken(auth: string | null | undefined) {
     return auth.split(/\s+/)[1]
 }
 
+const corsOptions = {
+    origin: '*',
+    methods: 'GET,HEAD',
+}
+
 export function setupApi() {
 
     const app = express()
+
+    app.use(cors(corsOptions))
 
     const jsonParser = express.json({
         inflate: true,
