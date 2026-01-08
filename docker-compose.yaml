@@ -1,9 +1,18 @@
-version: '3.7'
-
 services:
 
   db:
     image: influxdb:2.0-alpine
+    ulimits:
+      # InfluxDB requires a lot of open files to manage the shards
+      nofile:
+        soft: 65536
+        hard: 65536
+    logging: &logging
+      driver: json-file
+      options:
+        # Limit log size on disk to 64 MB
+        max-size: 16m
+        max-file: 4
     volumes:
       - ./influxdb-data:/var/lib/influxdb2
     ports:
@@ -20,6 +29,8 @@ services:
   webserver:
     build: .
     init: true
+    logging:
+      <<: *logging
     ports:
      - 127.0.0.1:8080:80
     environment:
